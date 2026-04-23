@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PO APLEONA ISRAEL</title>
+
+
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --red: #CC0000;
+            --red-dark: #990000;
+            --red-light: #fff5f5;
+            --gray: #f5f5f5;
+            --border: #e0e0e0;
+            --text: #2d2d2d;
+            --muted: #777;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            direction: rtl;
+            background: var(--gray);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* ── Header ── */
+        .app-header {
+            background: var(--red);
+            color: #fff;
+            padding: 0 20px;
+            height: 58px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        .header-brand h1 { font-size: 26px; font-weight: 900; letter-spacing: 1.5px; text-shadow: 0 2px 6px rgba(0,0,0,0.3); }
+        .header-brand small { font-size: 11px; opacity: 0.8; }
+        .po-badge {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.4);
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 700;
+        }
+        .btn-settings {
+            background: rgba(255,255,255,0.15);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.35);
+            padding: 7px 13px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 13px;
+            font-family: inherit;
+        }
+        .btn-settings:hover { background: rgba(255,255,255,0.25); }
+
+        /* ── Layout ── */
+        .container { max-width: 840px; margin: 22px auto; padding: 0 14px 50px; }
+
+        .card {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.07);
+            padding: 18px 22px;
+            margin-bottom: 14px;
+        }
+        .card-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--red);
+            margin-bottom: 14px;
+            padding-bottom: 9px;
+            border-bottom: 2px solid var(--gray);
+        }
+
+        /* ── Form ── */
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
+        @media (max-width: 560px) { .form-grid { grid-template-columns: 1fr; } }
+        .full-width { grid-column: 1 / -1; }
+
+        .form-group { display: flex; flex-direction: column; gap: 5px; }
+        label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.3px; }
+
+        input, select, textarea {
+            padding: 9px 11px;
+            border: 1.5px solid var(--border);
+            border-radius: 5px;
+            font-size: 14px;
+            font-family: inherit;
+            direction: rtl;
+            color: var(--text);
+            background: #fff;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--red);
+            box-shadow: 0 0 0 3px rgba(204,0,0,0.1);
+        }
+        input[readonly] { background: var(--gray); color: var(--muted); cursor: default; }
+        textarea { resize: vertical; }
+
+        /* ── Items Table ── */
+        .table-wrap { overflow-x: auto; }
+        .items-table { width: 100%; border-collapse: collapse; min-width: 540px; }
+        .items-table th {
+            background: var(--gray);
+            padding: 8px 7px;
+            text-align: right;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--muted);
+            border-bottom: 2px solid var(--border);
+        }
+        .items-table td { border-bottom: 1px solid var(--border); vertical-align: middle; }
+        .items-table td input {
+            border: none; border-radius: 0; background: transparent; padding: 8px 7px; width: 100%;
+        }
+        .items-table td input:focus { background: var(--red-light); box-shadow: none; border: none; }
+        .items-table tr:hover { background: #fafafa; }
+        .row-total { padding: 8px 9px; font-weight: 600; font-size: 13px; text-align: left; direction: ltr; white-space: nowrap; }
+        .btn-del {
+            background: none; border: none; color: #ddd; cursor: pointer;
+            font-size: 20px; padding: 3px 10px; transition: color 0.15s; line-height: 1;
+        }
+        .btn-del:hover { color: var(--red); }
+
+        .btn-add-row {
+            margin-top: 10px; background: none;
+            border: 1.5px dashed #ccc; color: var(--muted);
+            padding: 7px 15px; border-radius: 5px; cursor: pointer;
+            font-size: 13px; font-family: inherit; transition: all 0.15s;
+        }
+        .btn-add-row:hover { border-color: var(--red); color: var(--red); background: var(--red-light); }
+
+        /* ── Totals ── */
+        .totals-box {
+            margin-top: 13px; background: var(--gray); border-radius: 6px;
+            padding: 13px 15px; display: flex; flex-direction: column; gap: 7px;
+        }
+        .total-row { display: flex; justify-content: space-between; font-size: 14px; width: 210px; }
+        .total-row.grand {
+            font-weight: 700; font-size: 16px; color: var(--red);
+            padding-top: 7px; border-top: 2px solid var(--border);
+        }
+        .total-val { direction: ltr; font-variant-numeric: tabular-nums; }
+
+        /* ── Status ── */
+        .status { display: none; padding: 10px 15px; border-radius: 6px; margin-bottom: 13px; font-size: 13px; font-weight: 500; }
+        .status.success { display: block; background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .status.error   { display: block; background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .status.info    { display: block; background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+
+        /* ── Generate Btn ── */
+        .btn-generate {
+            width: 100%; padding: 14px; background: var(--red); color: #fff;
+            border: none; border-radius: 6px; font-size: 16px; font-weight: 700;
+            font-family: inherit; cursor: pointer; letter-spacing: 0.5px; transition: background 0.2s;
+        }
+        .btn-generate:hover { background: var(--red-dark); }
+        .btn-generate:disabled { background: #aaa; cursor: not-allowed; }
+
+        /* ── Modal ── */
+        .modal-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.5); z-index: 500;
+            align-items: center; justify-content: center; padding: 16px;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal-box {
+            background: #fff; border-radius: 10px; padding: 26px;
+            width: 100%; max-width: 440px; direction: rtl;
+        }
+        .modal-title { font-size: 17px; font-weight: 700; color: var(--red); margin-bottom: 18px; }
+        .modal-footer { display: flex; gap: 8px; margin-top: 18px; }
+        .btn-save {
+            flex: 1; padding: 10px; background: var(--red); color: #fff;
+            border: none; border-radius: 5px; font-size: 14px; font-family: inherit;
+            cursor: pointer; font-weight: 600;
+        }
+        .btn-save:hover { background: var(--red-dark); }
+        .btn-cancel {
+            padding: 10px 16px; background: var(--gray); border: 1px solid var(--border);
+            border-radius: 5px; font-size: 14px; font-family: inherit; cursor: pointer;
+        }
+        .hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+        /* ── Setup wizard ── */
+        .setup-steps { counter-reset: step; list-style: none; padding: 0; }
+        .setup-steps li {
+            counter-increment: step;
+            padding: 7px 0 7px 0;
+            font-size: 13px;
+            line-height: 1.6;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+        }
+        .setup-steps li:last-child { border-bottom: none; }
+        .setup-steps li::before {
+            content: counter(step);
+            min-width: 22px; height: 22px;
+            background: var(--red); color: #fff;
+            border-radius: 50%; font-size: 11px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; margin-top: 1px;
+        }
+        .code-block {
+            background: #1e1e1e; color: #d4d4d4;
+            border-radius: 6px; padding: 12px 14px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px; line-height: 1.7;
+            margin: 8px 0; direction: ltr; text-align: left;
+            white-space: pre; overflow-x: auto;
+        }
+        .conn-status {
+            display: inline-flex; align-items: center; gap: 6px;
+            font-size: 12px; padding: 4px 10px;
+            border-radius: 12px; margin-bottom: 12px;
+        }
+        .conn-status.ok  { background:#d4edda; color:#155724; }
+        .conn-status.off { background:#f8d7da; color:#721c24; }
+        .conn-status.na  { background:#e2e3e5; color:#383d41; }
+        .dot { width:8px; height:8px; border-radius:50%; }
+        .dot.green { background:#28a745; }
+        .dot.red   { background:#dc3545; }
+        .dot.gray  { background:#aaa; }
+    </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="app-header">
+    <div style="display:flex;align-items:center;gap:10px">
+        <span class="po-badge" id="poBadge">PO ...</span>
+        <button class="btn-settings" onclick="openModal('settingsModal')">⚙ הגדרות</button>
+    </div>
+    <div class="header-brand" style="text-align:left">
+        <h1>PO APLEONA ISRAEL</h1>
+        <small>מערכת הזמנות רכש</small>
+    </div>
+</div>
+
+<!-- VENDOR MODAL -->
+<div class="modal-overlay" id="vendorModal">
+    <div class="modal-box" style="max-width:440px">
+        <div class="modal-title">🏢 פרטי ספק חדש</div>
+        <div class="form-group" style="margin-bottom:12px">
+            <label>שם הספק *</label>
+            <input type="text" id="vm_name" placeholder="שם החברה...">
+        </div>
+        <div class="form-group" style="margin-bottom:12px">
+            <label>מספר ח.פ / ע.מ *</label>
+            <input type="text" id="vm_hp" placeholder="012345678">
+        </div>
+        <div class="form-group" style="margin-bottom:12px">
+            <label>כתובת</label>
+            <input type="text" id="vm_address" placeholder="רחוב, מספר, עיר...">
+        </div>
+        <div class="modal-footer">
+            <button class="btn-save" onclick="saveVendor()">✓ אישור</button>
+            <button class="btn-cancel" onclick="cancelVendor()">ביטול</button>
+        </div>
+    </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-overlay" id="settingsModal">
+    <div class="modal-box" style="max-width:520px;max-height:92vh;overflow-y:auto">
+        <div class="modal-title">⚙ הגדרות</div>
+
+        <!-- Connection status -->
+        <div class="conn-status na" id="connStatus">
+            <span class="dot gray" id="connDot"></span>
+            <span id="connText">לא מוגדר</span>
+        </div>
+
+        <!-- OpenAI -->
+        <div class="form-group" style="margin-bottom:16px">
+            <label>OpenAI API Key (לתרגום לאנגלית)</label>
+            <input type="password" id="cfg_openaiKey" placeholder="sk-proj-...">
+            <span class="hint">ללא מפתח — ה-PDF יופק בעברית</span>
+        </div>
+
+        <!-- Apps Script URL -->
+        <div class="form-group" style="margin-bottom:10px">
+            <label>Google Apps Script URL (סנכרון מספרי PO)</label>
+            <input type="text" id="cfg_scriptUrl" placeholder="https://script.google.com/macros/s/.../exec">
+            <span class="hint">ללא URL — מספרים נשמרים מקומית בלבד (ללא סנכרון)</span>
+        </div>
+        <button class="btn-cancel" style="margin-bottom:14px;font-size:12px;padding:6px 12px" onclick="testConnection()">🔌 בדוק חיבור</button>
+
+        <!-- Setup instructions (collapsible) -->
+        <details style="margin-bottom:16px">
+            <summary style="cursor:pointer;font-size:13px;font-weight:700;color:var(--red);padding:6px 0;user-select:none">
+                📖 הוראות הגדרת סנכרון (לחץ לפתיחה)
+            </summary>
+            <div style="margin-top:10px">
+                <ol class="setup-steps">
+                    <li>פתח <a href="https://sheets.google.com" target="_blank" style="color:var(--red)">sheets.google.com</a> וצור גיליון חדש בשם <strong>PO Counter</strong></li>
+                    <li>בתא <strong>A1</strong> הכנס את המספר: <strong>2000149</strong><br><span style="color:var(--muted);font-size:12px">(המספר הראשון שייווצר יהיה 2000150)</span></li>
+                    <li>לחץ על <strong>Extensions → Apps Script</strong></li>
+                    <li>מחק את הקוד הקיים והדבק את הקוד הבא:
+                        <div class="code-block">function doGet() {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  const sheet = SpreadsheetApp
+    .getActiveSpreadsheet()
+    .getSheetByName('Sheet1');
+  let n = Number(sheet.getRange('A1').getValue()) || 200499;
+  n++;
+  sheet.getRange('A1').setValue(n);
+  lock.releaseLock();
+  return ContentService
+    .createTextOutput(JSON.stringify({ po: n }))
+    .setMimeType(ContentService.MimeType.JSON);
+}</div>
+                        <span style="font-size:11px;color:var(--muted)">שים לב: אם שם הגיליון שלך לא Sheet1 — שנה בקוד</span>
+                    </li>
+                    <li>לחץ <strong>Deploy → New deployment → Web app</strong></li>
+                    <li>בשדה <em>"Who has access"</em> בחר <strong>Anyone</strong> ולחץ Deploy</li>
+                    <li>העתק את ה-URL שמופיע והדבק אותו בשדה למעלה</li>
+                </ol>
+            </div>
+        </details>
+
+        <!-- Manual PO correction -->
+        <div class="form-group" style="margin-bottom:4px">
+            <label>תיקון מספר PO ידני (אם צריך)</label>
+            <input type="number" id="cfg_poNumber" placeholder="השאר ריק אם אין תיקון">
+            <span class="hint">הכנס מספר רק אם צריך לאפס/לתקן. המספר הבא שייווצר יהיה מספר זה.</span>
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn-save" onclick="saveSettings()">💾 שמור</button>
+            <button class="btn-cancel" onclick="closeModal('settingsModal')">ביטול</button>
+        </div>
+    </div>
+</div>
+
+<!-- MAIN -->
+<div class="container">
+
+    <div class="status" id="statusBar"></div>
+
+    <!-- פרטי הזמנה -->
+    <div class="card">
+        <div class="card-title">📋 פרטי הזמנה</div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label>מספר הזמנה (PO)</label>
+                <div style="display:flex;gap:6px;align-items:center">
+                    <input type="text" id="poNumber" readonly style="flex:1" value="2000150">
+                    <button id="btnEditPo" onclick="toggleEditPO()"
+                        title="ערוך מספר PO"
+                        style="padding:7px 11px;background:#fff;border:1.5px solid var(--border);border-radius:5px;cursor:pointer;font-size:15px;color:var(--muted);transition:all 0.15s"
+                        onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'"
+                        onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">✏</button>
+                </div>
+                <span class="hint" id="poEditHint" style="display:none;color:var(--red)">מצב עריכה — שנה את המספר ולחץ ✓ לאישור</span>
+            </div>
+            <div class="form-group">
+                <label>תאריך</label>
+                <input type="text" id="poDate" readonly placeholder="טוען...">
+            </div>
+            <div class="form-group full-width">
+                <label>כותרת / נושא ההזמנה</label>
+                <input type="text" id="poTitle" placeholder="לדוגמה: שירותי תחזוקה למערכות מיזוג — IBM חיפה...">
+            </div>
+        </div>
+    </div>
+
+    <!-- ספק -->
+    <div class="card">
+        <div class="card-title">🏢 פרטי ספק</div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label>ספק</label>
+                <select id="vendorSelect" onchange="handleVendorSelect()">
+                    <option value="מכלול פתרונות בע&quot;מ">מכלול פתרונות בע"מ</option>
+                    <option value="other">אחר</option>
+                </select>
+            </div>
+            <div class="form-group" id="vendorOtherGroup" style="display:none">
+                <label>ספק שנבחר</label>
+                <input type="text" id="vendorOtherName" readonly style="background:var(--gray);color:var(--muted)">
+                <button style="margin-top:4px;background:none;border:1px solid var(--border);border-radius:4px;padding:4px 10px;cursor:pointer;font-size:12px;font-family:inherit;color:var(--muted)"
+                    onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'"
+                    onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'"
+                    onclick="openModal('vendorModal')">✏ ערוך פרטי ספק</button>
+            </div>
+            <div class="form-group full-width">
+                <label>כתובת ספק (אופציונלי)</label>
+                <input type="text" id="vendorAddress" placeholder="רחוב, עיר...">
+            </div>
+        </div>
+    </div>
+
+    <!-- מיקום ותשלום -->
+    <div class="card">
+        <div class="card-title">📍 מיקום ותנאי תשלום</div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label>מיקום אספקת השירות</label>
+                <select id="locationSelect" onchange="toggle('locationSelect','other','locationOtherGroup')">
+                    <option value="IBM Haifa">IBM חיפה</option>
+                    <option value="IBM Migdal HaShachar">IBM מגדל השחר</option>
+                    <option value="IBM Beer Sheva">IBM באר שבע</option>
+                    <option value="Bio-Rad Rishon LeZion">BIO RAD ראשון לציון</option>
+                    <option value="DB Tel Aviv">DB תל אביב</option>
+                    <option value="other">אחר</option>
+                </select>
+            </div>
+            <div class="form-group" id="locationOtherGroup" style="display:none">
+                <label>מיקום (הקלד)</label>
+                <input type="text" id="locationOtherText" placeholder="הקלד מיקום...">
+            </div>
+            <div class="form-group">
+                <label>תנאי תשלום</label>
+                <select id="paymentSelect" onchange="toggle('paymentSelect','other','paymentOtherGroup')">
+                    <option value="Net 120 (End of Month)" selected>שוטף + 120</option>
+                    <option value="Net 30 (End of Month)">שוטף + 30</option>
+                    <option value="Net 60 (End of Month)">שוטף + 60</option>
+                    <option value="Net 90 (End of Month)">שוטף + 90</option>
+                    <option value="other">אחר</option>
+                </select>
+            </div>
+            <div class="form-group" id="paymentOtherGroup" style="display:none">
+                <label>תנאי תשלום (הקלד)</label>
+                <input type="text" id="paymentOtherText" placeholder="הקלד...">
+            </div>
+        </div>
+    </div>
+
+    <!-- פריטים -->
+    <div class="card">
+        <div class="card-title">📦 פריטים להזמנה</div>
+        <div class="table-wrap">
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th style="width:32px">#</th>
+                        <th>תיאור</th>
+                        <th style="width:78px;text-align:center">כמות</th>
+                        <th style="width:125px;text-align:left;direction:ltr">מחיר יחידה ₪</th>
+                        <th style="width:115px;text-align:left;direction:ltr">סה"כ ₪</th>
+                        <th style="width:36px"></th>
+                    </tr>
+                </thead>
+                <tbody id="itemsBody"></tbody>
+            </table>
+        </div>
+        <button class="btn-add-row" onclick="addRow()">＋ הוסף שורה</button>
+
+        <div class="totals-box">
+            <div class="total-row">
+                <span>סכום ביניים</span>
+                <span class="total-val" id="dispSub">₪0.00</span>
+            </div>
+            <div class="total-row">
+                <span>מע"מ 18%</span>
+                <span class="total-val" id="dispVat">₪0.00</span>
+            </div>
+            <div class="total-row grand">
+                <span>סה"כ</span>
+                <span class="total-val" id="dispTotal">₪0.00</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- הערות -->
+    <div class="card">
+        <div class="card-title">📝 הערות</div>
+        <div class="form-group">
+            <textarea id="notes" rows="3" placeholder="הערות נוספות (יתורגמו לאנגלית אם הוגדר API Key)..."></textarea>
+        </div>
+    </div>
+
+    <!-- כפתור -->
+    <div class="card">
+        <button class="btn-generate" id="btnGen" onclick="generatePO()">
+            📄 צור הזמנת רכש PDF
+        </button>
+    </div>
+
+</div>
+
+<script>
+'use strict';
+
+// ── Config ────────────────────────────────────────────────
+const PO_START = 2000150;
+let cfg = { openaiKey: '', scriptUrl: '' };
+let rowIdx = 0;
+
+// ── Init ─────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+    // Set today's date immediately
+    const dateField = document.getElementById('poDate');
+    dateField.value = todayStr();
+    // Refresh every minute in case page stays open overnight
+    setInterval(() => { dateField.value = todayStr(); }, 60000);
+
+    // Reset counter if it's below the new starting number
+    const stored = parseInt(localStorage.getItem('apleona_po') || '0');
+    if (stored < PO_START - 1) {
+        localStorage.setItem('apleona_po', PO_START - 1);
+    }
+
+    // Load saved settings
+    const saved = localStorage.getItem('apleona_cfg');
+    if (saved) cfg = { ...cfg, ...JSON.parse(saved) };
+    document.getElementById('cfg_openaiKey').value = cfg.openaiKey || '';
+    document.getElementById('cfg_scriptUrl').value  = cfg.scriptUrl  || '';
+
+    updatePoPreview();
+    updateConnStatus();
+    addRow();
+});
+
+function todayStr() {
+    const d = new Date();
+    return [pad(d.getDate()), pad(d.getMonth()+1), d.getFullYear()].join('/');
+}
+function pad(n) { return String(n).padStart(2,'0'); }
+
+// ── PO Counter ────────────────────────────────────────────
+function peekNextPO() {
+    const stored = parseInt(localStorage.getItem('apleona_po') || String(PO_START - 1));
+    return (isNaN(stored) ? PO_START - 1 : stored) + 1;
+}
+
+function updatePoPreview() {
+    const n = peekNextPO();
+    document.getElementById('poNumber').value      = n;
+    document.getElementById('poBadge').textContent = 'PO ' + n;
+}
+
+// Claim next PO — via Apps Script if configured, else localStorage
+async function claimPO() {
+    if (cfg.scriptUrl) {
+        // Call the Apps Script web app
+        const url = cfg.scriptUrl + '?t=' + Date.now(); // cache-bust
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('שגיאת חיבור לשרת הסנכרון (HTTP ' + res.status + ')');
+        const data = await res.json();
+        const n = parseInt(data.po);
+        if (isNaN(n)) throw new Error('תשובה לא תקינה מהשרת');
+        // Keep local copy as fallback reference
+        localStorage.setItem('apleona_po', n);
+        return n;
+    } else {
+        // Local only
+        const next = peekNextPO();
+        localStorage.setItem('apleona_po', next);
+        return next;
+    }
+}
+
+// Test connection button
+async function testConnection() {
+    if (!cfg.scriptUrl) {
+        setConnStatus('off', 'הכנס URL לפני הבדיקה');
+        return;
+    }
+    setConnStatus('na', 'בודק חיבור...');
+    try {
+        // Use a peek call (same URL but we won't save the result)
+        const res = await fetch(cfg.scriptUrl + '?t=' + Date.now());
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        if (!data.po) throw new Error('תשובה לא תקינה');
+        setConnStatus('ok', 'מחובר ✓  |  PO הבא: ' + (data.po + 1));
+        // Revert the number we just "used" by noting the script incremented it
+        // We display PO+1 as the next expected
+    } catch(e) {
+        setConnStatus('off', 'שגיאה: ' + e.message);
+    }
+}
+
+function setConnStatus(state, text) {
+    const el  = document.getElementById('connStatus');
+    const dot = document.getElementById('connDot');
+    const txt = document.getElementById('connText');
+    el.className  = 'conn-status ' + (state==='ok' ? 'ok' : state==='off' ? 'off' : 'na');
+    dot.className = 'dot ' + (state==='ok' ? 'green' : state==='off' ? 'red' : 'gray');
+    txt.textContent = text;
+}
+
+function updateConnStatus() {
+    if (cfg.scriptUrl) setConnStatus('ok',  'URL מוגדר — סנכרון פעיל');
+    else               setConnStatus('na',  'לא מוגדר — מקומי בלבד');
+}
+
+// ── Settings ─────────────────────────────────────────────
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function saveSettings() {
+    cfg.openaiKey = document.getElementById('cfg_openaiKey').value.trim();
+    cfg.scriptUrl = document.getElementById('cfg_scriptUrl').value.trim();
+
+    // Allow manual PO correction (local fallback only)
+    const manualPO = parseInt(document.getElementById('cfg_poNumber').value);
+    if (!isNaN(manualPO) && manualPO >= PO_START) {
+        localStorage.setItem('apleona_po', manualPO - 1);
+    }
+    document.getElementById('cfg_poNumber').value = '';
+
+    localStorage.setItem('apleona_cfg', JSON.stringify(cfg));
+    closeModal('settingsModal');
+
+    updatePoPreview();
+    updateConnStatus();
+    showStatus('הגדרות נשמרו', 'success');
+    setTimeout(hideStatus, 2500);
+}
+
+// ── Manual PO edit ───────────────────────────────────────
+let poEditMode = false;
+function toggleEditPO() {
+    const input = document.getElementById('poNumber');
+    const btn   = document.getElementById('btnEditPo');
+    const hint  = document.getElementById('poEditHint');
+    if (!poEditMode) {
+        // Enter edit mode
+        input.removeAttribute('readonly');
+        input.style.background = '#fff';
+        input.style.color = 'var(--text)';
+        input.style.borderColor = 'var(--red)';
+        input.select();
+        btn.textContent = '✓';
+        btn.style.background = 'var(--red)';
+        btn.style.color = '#fff';
+        btn.style.borderColor = 'var(--red)';
+        btn.onmouseover = null; btn.onmouseout = null;
+        hint.style.display = 'block';
+        poEditMode = true;
+    } else {
+        // Confirm edit
+        const val = parseInt(input.value);
+        if (!isNaN(val) && val > 0) {
+            localStorage.setItem('apleona_po', val - 1);
+            input.value = val;
+            document.getElementById('poBadge').textContent = cfg.scriptUrl ? 'PO מסונכרן' : 'PO ' + val;
+        }
+        input.setAttribute('readonly', true);
+        input.style.background = '';
+        input.style.color = '';
+        input.style.borderColor = '';
+        btn.textContent = '✏';
+        btn.style.background = '#fff';
+        btn.style.color = 'var(--muted)';
+        btn.style.borderColor = 'var(--border)';
+        btn.onmouseover = () => { btn.style.borderColor='var(--red)'; btn.style.color='var(--red)'; };
+        btn.onmouseout  = () => { btn.style.borderColor='var(--border)'; btn.style.color='var(--muted)'; };
+        hint.style.display = 'none';
+        poEditMode = false;
+    }
+}
+
+// ── Toggle helpers ────────────────────────────────────────
+// ── Vendor select handler ────────────────────────────────
+function handleVendorSelect() {
+    const v = document.getElementById('vendorSelect').value;
+    if (v === 'other') {
+        // Clear previous
+        document.getElementById('vm_name').value    = '';
+        document.getElementById('vm_hp').value      = '';
+        document.getElementById('vm_address').value = '';
+        openModal('vendorModal');
+        document.getElementById('vendorOtherGroup').style.display = 'none';
+    } else {
+        document.getElementById('vendorOtherGroup').style.display = 'none';
+        document.getElementById('vendorAddress').value = '';
+    }
+}
+
+function saveVendor() {
+    const name = document.getElementById('vm_name').value.trim();
+    const hp   = document.getElementById('vm_hp').value.trim();
+    const addr = document.getElementById('vm_address').value.trim();
+
+    if (!name) { alert('נא להזין שם ספק'); return; }
+
+    document.getElementById('vendorOtherName').value = name + (hp ? ` | ח.פ: ${hp}` : '');
+    if (addr) document.getElementById('vendorAddress').value = addr;
+    document.getElementById('vendorOtherGroup').style.display = 'flex';
+
+    // Store ח.פ for PDF use
+    document.getElementById('vendorOtherName').dataset.hp      = hp;
+    document.getElementById('vendorOtherName').dataset.rawName = name;
+
+    closeModal('vendorModal');
+}
+
+function cancelVendor() {
+    // Revert selection to מכלול if user cancels without filling
+    const name = document.getElementById('vendorOtherName').dataset.rawName;
+    if (!name) {
+        document.getElementById('vendorSelect').value = document.getElementById('vendorSelect').options[0].value;
+        document.getElementById('vendorOtherGroup').style.display = 'none';
+    }
+    closeModal('vendorModal');
+}
+
+function toggle(selId, triggerVal, groupId) {
+    const v = document.getElementById(selId).value;
+    document.getElementById(groupId).style.display = v === triggerVal ? 'flex' : 'none';
+}
+
+// ── Items table ───────────────────────────────────────────
+function addRow() {
+    rowIdx++;
+    const id = 'r' + rowIdx;
+    const tr = document.createElement('tr');
+    tr.id = id;
+    tr.innerHTML = `
+        <td style="text-align:center;color:var(--muted);font-size:12px;padding:0 4px" class="rn">${rowIdx}</td>
+        <td><input type="text" placeholder="תיאור הפריט..."></td>
+        <td><input type="number" min="0" value="1" style="text-align:center" oninput="recalc()"></td>
+        <td><input type="number" min="0" step="0.01" placeholder="0.00" style="direction:ltr;text-align:left" oninput="recalc()"></td>
+        <td class="row-total" style="direction:ltr">₪0.00</td>
+        <td style="text-align:center"><button class="btn-del" onclick="delRow('${id}')" title="הסר">×</button></td>
+    `;
+    document.getElementById('itemsBody').appendChild(tr);
+}
+
+function delRow(id) {
+    document.getElementById(id)?.remove();
+    renumber(); recalc();
+}
+
+function renumber() {
+    document.querySelectorAll('#itemsBody tr').forEach((tr,i) => {
+        tr.querySelector('.rn').textContent = i+1;
+    });
+}
+
+function recalc() {
+    let sub = 0;
+    document.querySelectorAll('#itemsBody tr').forEach(tr => {
+        const inp = tr.querySelectorAll('input');
+        const qty = parseFloat(inp[1]?.value)||0;
+        const prc = parseFloat(inp[2]?.value)||0;
+        const tot = qty * prc;
+        sub += tot;
+        tr.querySelector('.row-total').textContent = '₪' + n2(tot);
+    });
+    const vat = sub * 0.18, total = sub + vat;
+    document.getElementById('dispSub').textContent   = '₪' + n2(sub);
+    document.getElementById('dispVat').textContent   = '₪' + n2(vat);
+    document.getElementById('dispTotal').textContent = '₪' + n2(total);
+    return { sub, vat, total };
+}
+
+function n2(n) {
+    return n.toLocaleString('he-IL',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+
+// ── Collect form data ────────────────────────────────────
+function collect() {
+    const vSel = document.getElementById('vendorSelect').value;
+    // Vendor name — exactly as typed/selected (no translation)
+    const otherInput = document.getElementById('vendorOtherName');
+    const vendorName = vSel === 'other'
+        ? (otherInput.dataset.rawName || otherInput.value.trim())
+        : vSel;
+    const vendorHp = vSel === 'other' ? (otherInput.dataset.hp || '') : '';
+    // Default address for מכלול — Hebrew
+    const defaultAddress = vSel !== 'other'
+        ? 'מדינת היהודים 89, הרצליה פיתוח'
+        : '';
+
+    const lSel = document.getElementById('locationSelect');
+    const locationHe = lSel.value === 'other'
+        ? document.getElementById('locationOtherText').value.trim()
+        : lSel.selectedOptions[0].text;
+
+    const pSel = document.getElementById('paymentSelect');
+    const paymentHe = pSel.value === 'other'
+        ? document.getElementById('paymentOtherText').value.trim()
+        : pSel.selectedOptions[0].text;
+
+    const items = [];
+    document.querySelectorAll('#itemsBody tr').forEach(tr => {
+        const inp = tr.querySelectorAll('input');
+        const descHe = inp[0]?.value.trim() || '';
+        const qty    = parseFloat(inp[1]?.value) || 0;
+        const price  = parseFloat(inp[2]?.value) || 0;
+        if (descHe || qty || price) {
+            items.push({ descHe, descEn: null, qty, price, total: qty*price });
+        }
+    });
+
+    const notesHe  = document.getElementById('notes').value.trim();
+    const titleHe  = document.getElementById('poTitle').value.trim();
+    const { sub, vat, total } = recalc();
+    const manualAddress = document.getElementById('vendorAddress').value.trim();
+    return { vendorName, vendorHp, vendorAddress: manualAddress || defaultAddress,
+             locationHe, paymentHe,
+             titleHe, titleEn: null,
+             items, notesHe, notesEn: null, sub, vat, total };
+}
+
+// ── OpenAI translation ────────────────────────────────────
+async function translateBatch(texts) {
+    if (!texts.length || !cfg.openaiKey) return texts;
+
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+cfg.openaiKey },
+        body: JSON.stringify({
+            model: 'gpt-4o-mini',
+            temperature: 0,
+            messages: [
+                { role:'system', content:
+                    'You are a professional translator for formal business purchase orders. ' +
+                    'Translate Hebrew to English. Use formal business English. ' +
+                    'Return ONLY a valid JSON array of strings. No markdown, no code blocks, no explanation. ' +
+                    'The output array must have exactly the same number of elements as the input.'
+                },
+                { role:'user', content: JSON.stringify(texts) }
+            ]
+        })
+    });
+    if (!res.ok) { const e=await res.json(); throw new Error(e.error?.message||res.statusText); }
+    const d = await res.json();
+    const raw = d.choices[0].message.content.trim().replace(/^```json\s*/,'').replace(/\s*```$/,'').trim();
+    return JSON.parse(raw);
+}
+
+// ── Main: Generate PO ────────────────────────────────────
+async function generatePO() {
+    const data = collect();
+    if (!data.items.length) { showStatus('נא להוסיף לפחות פריט אחד', 'error'); return; }
+
+    const btn = document.getElementById('btnGen');
+    btn.disabled = true; btn.textContent = '⏳ יוצר PDF...';
+
+    try {
+        showStatus('משריין מספר PO...', 'info');
+        const poNum = await claimPO();
+        document.getElementById('poNumber').value = poNum;
+        document.getElementById('poBadge').textContent = 'PO ' + poNum;
+
+        buildPDF(poNum, data);
+        updatePoPreview();
+        showStatus('✅ הזמנת רכש PO-' + poNum + ' הופקה בהצלחה!', 'success');
+
+    } catch(e) {
+        console.error(e);
+        showStatus('שגיאה: ' + e.message, 'error');
+    } finally {
+        btn.disabled = false; btn.textContent = '📄 צור הזמנת רכש PDF';
+    }
+}
+
+// ── PO Print Window ──────────────────────────────────────
+function buildPDF(poNum, d) {
+    const date = document.getElementById('poDate').value;
+
+    // Build document title = suggested filename when printing to PDF
+    const docTitle = [d.locationHe, d.titleHe, 'PO' + poNum].filter(Boolean).join(' - ');
+
+    const itemRows = d.items.map((item, i) => `
+        <tr>
+            <td class="center">${i+1}</td>
+            <td>${esc(item.descHe || '')}</td>
+            <td class="center">${item.qty}</td>
+            <td class="num">${n2(item.price)} ש"ח</td>
+            <td class="num">${n2(item.total)} ש"ח</td>
+        </tr>`).join('');
+
+    const notesHtml = d.notesHe
+        ? `<div class="notes"><div class="sec-title">הערות</div><div>${esc(d.notesHe)}</div></div>`
+        : '';
+
+    const html = `<!DOCTYPE html>
+<html dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>${docTitle}</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@400;700&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0}
+  @page{size:A4;margin:0}
+  body{font-family:'Rubik',Arial,sans-serif;font-size:9pt;color:#333;background:#fff;width:210mm;min-height:297mm;direction:rtl}
+
+  /* Header — stays LTR (brand name) */
+  .hdr{background:#CC0000;color:#fff;padding:7mm 14mm 6mm;display:flex;justify-content:space-between;align-items:flex-start;direction:ltr}
+  .hdr-left h1{font-size:20pt;font-weight:700;letter-spacing:.5px}
+  .hdr-left p{font-size:8pt;opacity:.85;margin-top:1mm}
+  .hdr-right{text-align:right}
+  .hdr-right .po-num{font-size:13pt;font-weight:700}
+  .hdr-right .po-date{font-size:8.5pt;margin-top:1mm}
+
+  /* Company details */
+  .company{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4mm;padding:4mm 14mm;border-bottom:1.5pt solid #CC0000;font-size:7.5pt;color:#333;direction:rtl;text-align:right}
+  .co-title{font-weight:700;margin-bottom:1.5mm}
+
+  /* Content area */
+  .content{padding:5mm 14mm 20mm}
+
+  /* Info boxes */
+  .boxes{display:grid;grid-template-columns:1fr 1fr;gap:4mm;margin-bottom:5mm}
+  .box{background:#fafafa;border:.5pt solid #ddd;border-radius:3pt;padding:3mm}
+  .box-title{font-size:6.5pt;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.4pt;margin-bottom:2mm}
+  .vendor-name{font-size:10.5pt;font-weight:700;color:#222}
+  .vendor-addr{font-size:8pt;color:#777;margin-top:1.5mm}
+  .detail-label{font-size:7.5pt;color:#aaa;margin-bottom:.5mm}
+  .detail-val{font-size:9pt;font-weight:700;color:#333}
+  .detail-pay{font-size:8pt;color:#666;margin-top:2mm}
+
+  /* Table */
+  .sec-title{font-size:7pt;font-weight:700;color:#aaa;text-transform:uppercase;margin-bottom:2mm}
+  table{width:100%;border-collapse:collapse;font-size:8.5pt}
+  thead tr{background:#5a5a5a;color:#fff}
+  thead th{padding:2.5mm 3mm;font-weight:700;text-align:right}
+  thead th.center{text-align:center}
+  thead th.num{text-align:left;direction:ltr}
+  tbody tr:nth-child(even){background:#f9f9f9}
+  tbody td{padding:2mm 3mm;border-bottom:.4pt solid #eee;color:#333;text-align:right}
+  td.center{text-align:center}
+  td.num{text-align:left;direction:ltr;font-variant-numeric:tabular-nums}
+
+  /* Totals — flex-start = visually right in RTL */
+  .totals{display:flex;justify-content:flex-start;margin-top:4mm}
+  .totals-box{width:64mm;border:.5pt solid #ddd;border-radius:3pt;overflow:hidden}
+  .tot-row{display:flex;justify-content:space-between;padding:2mm 3mm;font-size:8pt;color:#666;background:#fafafa}
+  .tot-grand{display:flex;justify-content:space-between;padding:2.5mm 3mm;background:#5a5a5a;color:#fff;font-weight:700;font-size:9pt}
+
+  /* Notes */
+  .notes{margin-top:5mm;font-size:8pt;color:#555}
+  .notes .sec-title{margin-bottom:1.5mm}
+
+  /* Signature */
+  .sig{margin-top:8mm}
+  .sig-name{font-style:italic;font-size:9pt;color:#222}
+  .sig-detail{font-size:7.5pt;color:#999;margin-top:1mm}
+
+  /* Footer */
+  .footer{position:fixed;bottom:0;left:0;right:0;background:#CC0000;color:#fff;text-align:center;font-size:7pt;padding:2.2mm;direction:ltr}
+
+  /* Print bar */
+  .print-bar{position:fixed;bottom:15mm;left:10mm;display:flex;gap:8px;z-index:999}
+  .btn-p{background:#CC0000;color:#fff;border:none;padding:9px 20px;border-radius:5px;cursor:pointer;font-size:13px;font-weight:700;font-family:inherit}
+  .btn-c{background:#555;color:#fff;border:none;padding:9px 16px;border-radius:5px;cursor:pointer;font-size:13px;font-family:inherit}
+  @media print{.print-bar{display:none}.footer{position:fixed}}
+</style>
+</head>
+<body>
+
+<!-- כותרת (נשארת באנגלית — מיתוג) -->
+<div class="hdr">
+  <div class="hdr-left">
+    <h1>APLEONA ISRAEL LTD</h1>
+    <p>הזמנת רכש</p>
+  </div>
+  <div class="hdr-right">
+    <div class="po-num">מספר הזמנה: ${poNum}</div>
+    <div class="po-date">תאריך: ${date}</div>
+  </div>
+</div>
+
+<!-- פרטי החברה -->
+<div class="company">
+  <div>
+    <div class="co-title">Apleona Ltd</div>
+    Abba Hillel 16<br>Ramat Gan 5250608<br>Israel<br>www.apleona.com/en/
+  </div>
+  <div>
+    <div class="co-title">ניהול</div>
+    Gordon Atkinson<br>Dr. Gert Riegel
+  </div>
+  <div>
+    <div class="co-title">משרד ראשי</div>
+    Ramat Gan<br>מע"מ: 516351194<br>ח.פ: 516351194<br>טל: +972-52-955-5930
+  </div>
+</div>
+
+<!-- תוכן -->
+<div class="content">
+
+  ${d.titleHe ? `<div style="margin-bottom:5mm;padding:3mm 4mm;background:#fff8f0;border-right:3pt solid #CC0000;border-radius:2pt"><span style="font-size:7pt;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.3pt">נושא</span><div style="font-size:10.5pt;font-weight:700;color:#222;margin-top:1mm">${esc(d.titleHe)}</div></div>` : ''}
+
+  <div class="boxes">
+    <div class="box">
+      <div class="box-title">ספק / מזמין</div>
+      <div class="vendor-name">${esc(d.vendorName || '')}</div>
+      ${d.vendorHp ? `<div class="vendor-addr" style="font-size:7.5pt;color:#aaa;margin-top:1mm">ח.פ / ע.מ: ${esc(d.vendorHp)}</div>` : ''}
+      ${d.vendorAddress ? `<div class="vendor-addr">${esc(d.vendorAddress)}</div>` : ''}
+    </div>
+    <div class="box">
+      <div class="box-title">פרטי הזמנה</div>
+      <div class="detail-label">מיקום אספקת השירות</div>
+      <div class="detail-val">${esc(d.locationHe || '')}</div>
+      <div class="detail-pay">תנאי תשלום: ${esc(d.paymentHe || '')}</div>
+    </div>
+  </div>
+
+  <div class="sec-title">פריטים</div>
+  <table>
+    <thead>
+      <tr>
+        <th class="center" style="width:8mm">#</th>
+        <th>תיאור</th>
+        <th class="center" style="width:14mm">כמות</th>
+        <th class="num" style="width:30mm">מחיר יחידה</th>
+        <th class="num" style="width:30mm">סה"כ</th>
+      </tr>
+    </thead>
+    <tbody>${itemRows}</tbody>
+  </table>
+
+  <div class="totals">
+    <div class="totals-box">
+      <div class="tot-row"><span>סכום ביניים</span><span style="direction:ltr">${n2(d.sub)} ש"ח</span></div>
+      <div class="tot-row"><span>מע"מ (18%)</span><span style="direction:ltr">${n2(d.vat)} ש"ח</span></div>
+      <div class="tot-grand"><span>סה"כ לתשלום</span><span style="direction:ltr">${n2(d.total)} ש"ח</span></div>
+    </div>
+  </div>
+
+  ${notesHtml}
+
+  <div class="sig" style="margin-top:10mm">
+    <div class="sig-name">תומר כהן</div>
+    <div class="sig-detail">מנכ"ל, Apleona Israel &nbsp;|&nbsp; תאריך: ${date}</div>
+  </div>
+
+</div>
+
+<div class="footer">Apleona Israel Ltd &nbsp;|&nbsp; Abba Hillel 16, Ramat Gan 5250608 &nbsp;|&nbsp; VAT 516351194 &nbsp;|&nbsp; www.apleona.com/en/</div>
+
+<div class="print-bar">
+  <button class="btn-p" onclick="window.print()">🖨 הדפס / שמור PDF</button>
+  <button class="btn-c" onclick="window.close()">סגור</button>
+</div>
+
+</body>
+</html>`;
+
+    const win = window.open('', '_blank', 'width=900,height=750');
+    if (!win) { alert('אנא אשר פתיחת חלון popup בדפדפן'); return; }
+    win.document.write(html);
+    win.document.close();
+}
+
+function esc(s) {
+    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Status ────────────────────────────────────────────────
+function showStatus(msg, type) {
+    const el = document.getElementById('statusBar');
+    el.textContent = msg; el.className = 'status '+type;
+}
+function hideStatus() { document.getElementById('statusBar').className = 'status'; }
+</script>
+</body>
+</html>
