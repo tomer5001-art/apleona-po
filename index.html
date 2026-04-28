@@ -235,6 +235,17 @@
         .dot.green { background:#28a745; }
         .dot.red   { background:#dc3545; }
         .dot.gray  { background:#aaa; }
+
+        /* ── Destination folder modal ── */
+        .btn-dest {
+            padding: 13px 10px; background: #f8f8f8;
+            border: 1.5px solid var(--border); border-radius: 6px;
+            cursor: pointer; font-size: 13px; font-family: inherit;
+            font-weight: 600; color: var(--text); text-align: center;
+            transition: all 0.15s;
+        }
+        .btn-dest:hover { border-color: var(--red); background: var(--red-light); color: var(--red); }
+        .dest-hint { font-size: 12px; color: var(--muted); margin: 12px 0 14px; line-height: 1.6; }
     </style>
 </head>
 <body>
@@ -345,6 +356,16 @@
             <button class="btn-save" onclick="saveSettings()">💾 שמור</button>
             <button class="btn-cancel" onclick="closeModal('settingsModal')">ביטול</button>
         </div>
+    </div>
+</div>
+
+<!-- DESTINATION MODAL -->
+<div class="modal-overlay" id="destModal">
+    <div class="modal-box" style="max-width:420px">
+        <div class="modal-title">📁 בחר תיקיית שמירה</div>
+        <div id="destButtons" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"></div>
+        <p class="dest-hint" id="destHint"></p>
+        <button class="btn-cancel" onclick="closeModal('destModal')">ביטול</button>
     </div>
 </div>
 
@@ -840,24 +861,57 @@ async function translateBatch(texts) {
     return JSON.parse(raw);
 }
 
-// ── Main: Generate PO ────────────────────────────────────
-async function generatePO() {
+// ── Destination folder selection ────────────────────────
+const IBM_FOLDERS = ['חיפה', 'שחר גבעתיים', 'באר שבע', 'פתח תיקווה', 'כלל האתרים'];
+
+function generatePO() {
     const data = collect();
     if (!data.items.length) { showStatus('נא להוסיף לפחות פריט אחד', 'error'); return; }
+    const locVal = document.getElementById('locationSelect').value;
+    if (locVal === 'other') { proceedWithDest(null, data); return; }
+    showDestModal(locVal, data);
+}
 
+function showDestModal(locVal, data) {
+    const container = document.getElementById('destButtons');
+    container.innerHTML = '';
+
+    const mk = (label, dest, full, dashed) => {
+        const b = document.createElement('button');
+        b.className = 'btn-dest';
+        if (full) b.style.gridColumn = '1 / -1';
+        if (dashed) b.style.borderStyle = 'dashed';
+        b.textContent = label;
+        b.onclick = () => { closeModal('destModal'); proceedWithDest(dest, data); };
+        container.appendChild(b);
+    };
+
+    if (locVal.startsWith('IBM')) {
+        IBM_FOLDERS.forEach(f => mk(f, f, false, false));
+        document.getElementById('destHint').textContent =
+            'שמור ב-Downloads — הקובץ יועבר אוטומטית לתת-תיקיית IBM שנבחרה';
+    } else {
+        const label = locVal === 'Bio-Rad Rishon LeZion' ? 'BIO RAD ראשון לציון ✓' : 'DB תל אביב ✓';
+        mk(label, null, true, false);
+        document.getElementById('destHint').textContent =
+            'שמור ב-Downloads — הקובץ יועבר אוטומטית לתיקיית הלקוח';
+    }
+    mk('📂 בחר תיקייה אחרת (ידני)', null, true, true);
+    openModal('destModal');
+}
+
+// ── Main: Generate PO ────────────────────────────────────
+async function proceedWithDest(dest, data) {
     const btn = document.getElementById('btnGen');
     btn.disabled = true; btn.textContent = '⏳ יוצר PDF...';
-
     try {
         showStatus('משריין מספר PO...', 'info');
         const poNum = await claimPO();
         document.getElementById('poNumber').value = poNum;
         document.getElementById('poBadge').textContent = 'PO ' + poNum;
-
-        buildPDF(poNum, data);
+        buildPDF(poNum, data, dest);
         updatePoPreview();
         showStatus('✅ הזמנת רכש PO-' + poNum + ' הופקה בהצלחה!', 'success');
-
     } catch(e) {
         console.error(e);
         showStatus('שגיאה: ' + e.message, 'error');
@@ -867,11 +921,13 @@ async function generatePO() {
 }
 
 // ── PO Print Window ──────────────────────────────────────
-function buildPDF(poNum, d) {
+function buildPDF(poNum, d, dest) {
     const date = document.getElementById('poDate').value;
 
-    // Build document title = suggested filename when printing to PDF
-    const docTitle = [d.locationHe, d.titleHe, 'PO' + poNum].filter(Boolean).join(' - ');
+    // IBM with explicit subfolder → encode dest in filename for PS routing
+    const isIBM = d.locationHe.startsWith('IBM');
+    const routingPrefix = (isIBM && dest) ? ('IBM [' + dest + ']') : d.locationHe;
+    const docTitle = [routingPrefix, d.titleHe, 'PO' + poNum].filter(Boolean).join(' - ');
 
     const itemRows = d.items.map((item, i) => `
         <tr>
