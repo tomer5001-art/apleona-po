@@ -912,13 +912,23 @@ async function proceedWithDest(dest, data) {
         document.getElementById('poBadge').textContent = 'PO ' + poNum;
 
         if (dest !== null) {
-            showStatus('⏳ יוצר ומוריד PDF...', 'info');
+            showStatus('⏳ יוצר PDF...', 'info');
             await autoSavePDF(poNum, data, dest);
             const folder = (dest && dest !== 'auto') ? dest : 'תיקיית הלקוח';
-            showStatus('✅ PO-' + poNum + ' נשמר אוטומטית ל' + folder + '!', 'success');
+            showStatus('✅ PO-' + poNum + ' נשמר בתיקיית ' + folder + '!', 'success');
         } else {
-            buildPDF(poNum, data, null);
-            showStatus('✅ הזמנת רכש PO-' + poNum + ' הופקה בהצלחה!', 'success');
+            // בחר תיקייה אחרת — file picker
+            showStatus('⏳ יוצר PDF...', 'info');
+            const pdfBlob = await generatePDFBlob(poNum, data);
+            const fname = [data.locationHe, data.titleHe, 'PO' + poNum].filter(Boolean).join(' - ') + '.pdf';
+            const fh = await window.showSaveFilePicker({
+                suggestedName: fname,
+                types: [{ description: 'PDF Files', accept: { 'application/pdf': ['.pdf'] } }]
+            });
+            const w = await fh.createWritable();
+            await w.write(pdfBlob);
+            await w.close();
+            showStatus('✅ PO-' + poNum + ' נשמר!', 'success');
         }
         updatePoPreview();
     } catch(e) {
@@ -1038,17 +1048,22 @@ function buildPOInner(poNum, d, date) {
     </div>`;
 }
 
-async function autoSavePDF(poNum, d, dest) {
-    const isIBM = d.locationHe.startsWith('IBM');
-    const routingPrefix = (isIBM && dest && dest !== 'auto') ? ('IBM [' + dest + ']') : d.locationHe;
-    const filename = [routingPrefix, d.titleHe, 'PO' + poNum].filter(Boolean).join(' - ') + '.pdf';
-    const date = document.getElementById('poDate').value;
+// ── File System handles (נשמרים בזיכרון לכל המפגש) ──────
+const _dirHandles = {};
 
+async function getOrPickFolder(key, hint) {
+    if (_dirHandles[key]) return _dirHandles[key];
+    showStatus('בחר את תיקיית ' + hint + ' ולחץ "Select Folder"', 'info');
+    _dirHandles[key] = await window.showDirectoryPicker({ mode: 'readwrite', id: key });
+    return _dirHandles[key];
+}
+
+async function generatePDFBlob(poNum, d) {
+    const date = document.getElementById('poDate').value;
     const wrap = document.createElement('div');
     wrap.style.cssText = 'position:fixed;left:-9999px;top:0;width:794px;background:#fff;direction:rtl';
     wrap.innerHTML = buildPOInner(poNum, d, date);
     document.body.appendChild(wrap);
-
     try {
         await new Promise(r => setTimeout(r, 400));
         const canvas = await html2canvas(wrap, {
@@ -1057,11 +1072,40 @@ async function autoSavePDF(poNum, d, dest) {
         const { jsPDF } = window.jspdf;
         const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
         const imgData = canvas.toDataURL('image/jpeg', 0.93);
-        const pdfH = Math.min(297, (canvas.height * 210) / canvas.width);
-        pdf.addImage(imgData, 'JPEG', 0, 0, 210, pdfH);
-        pdf.save(filename);
+        pdf.addImage(imgData, 'JPEG', 0, 0, 210, Math.min(297, (canvas.height * 210) / canvas.width));
+        return pdf.output('blob');
     } finally {
         document.body.removeChild(wrap);
+    }
+}
+
+async function writePDFToFolder(pdfBlob, filename, rootHandle, subfolder) {
+    const target = subfolder
+        ? await rootHandle.getDirectoryHandle(subfolder, { create: false })
+        : rootHandle;
+    const fh = await target.getFileHandle(filename, { create: true });
+    const w = await fh.createWritable();
+    await w.write(pdfBlob);
+    await w.close();
+}
+
+async function autoSavePDF(poNum, d, dest) {
+    const isIBM = d.locationHe.startsWith('IBM');
+    const locVal = document.getElementById('locationSelect').value;
+    const routingPrefix = (isIBM && dest && dest !== 'auto') ? ('IBM [' + dest + ']') : d.locationHe;
+    const filename = [routingPrefix, d.titleHe, 'PO' + poNum].filter(Boolean).join(' - ') + '.pdf';
+
+    const pdfBlob = await generatePDFBlob(poNum, d);
+
+    if (isIBM && dest && dest !== 'auto') {
+        const root = await getOrPickFolder('ibm', '"PO to Michlol" של IBM');
+        await writePDFToFolder(pdfBlob, filename, root, dest);
+    } else if (locVal === 'Bio-Rad Rishon LeZion') {
+        const root = await getOrPickFolder('biorad', '"PO to Michlol" של BIO RAD');
+        await writePDFToFolder(pdfBlob, filename, root, null);
+    } else {
+        const root = await getOrPickFolder('db', '"PO TO MICHLOL" של DB');
+        await writePDFToFolder(pdfBlob, filename, root, null);
     }
 }
 
