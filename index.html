@@ -1176,8 +1176,8 @@ async function ensureHebrewFonts() {
     if (_fontsReady) return _fontsReady;
     _fontsReady = (async () => {
         const FONT_URLS = {
-            'Heebo-Regular.ttf': 'https://cdn.jsdelivr.net/npm/@expo-google-fonts/heebo@0.2.3/Heebo_400Regular.ttf',
-            'Heebo-Bold.ttf': 'https://cdn.jsdelivr.net/npm/@expo-google-fonts/heebo@0.2.3/Heebo_700Bold.ttf'
+            'Rubik-Regular.ttf': 'https://cdn.jsdelivr.net/npm/@expo-google-fonts/rubik@0.2.3/Rubik_400Regular.ttf',
+            'Rubik-Bold.ttf': 'https://cdn.jsdelivr.net/npm/@expo-google-fonts/rubik@0.2.3/Rubik_700Bold.ttf'
         };
         const entries = await Promise.all(Object.entries(FONT_URLS).map(async ([name, url]) => {
             const r = await fetch(url);
@@ -1187,11 +1187,11 @@ async function ensureHebrewFonts() {
         pdfMake.vfs = pdfMake.vfs || {};
         entries.forEach(([name, b64]) => { pdfMake.vfs[name] = b64; });
         pdfMake.fonts = {
-            Heebo: {
-                normal: 'Heebo-Regular.ttf',
-                bold: 'Heebo-Bold.ttf',
-                italics: 'Heebo-Regular.ttf',
-                bolditalics: 'Heebo-Bold.ttf'
+            Rubik: {
+                normal: 'Rubik-Regular.ttf',
+                bold: 'Rubik-Bold.ttf',
+                italics: 'Rubik-Regular.ttf',
+                bolditalics: 'Rubik-Bold.ttf'
             }
         };
     })();
@@ -1434,7 +1434,7 @@ function buildDocDef(poNum, d, date, lang) {
         pageSize: 'A4',
         pageMargins: [0, 0, 0, 36],
         info: { title: 'PO ' + poNum, author: 'Apleona Israel Ltd', subject: title || ('PO ' + poNum) },
-        defaultStyle: { font: 'Heebo', fontSize: 9, color: '#333' },
+        defaultStyle: { font: 'Rubik', fontSize: 9, color: '#333' },
         styles: {
             tableHead: { bold: true, color: 'white', fontSize: 9 },
             boxTitle: { fontSize: 7, bold: true, color: '#aaa', characterSpacing: 0.3 },
