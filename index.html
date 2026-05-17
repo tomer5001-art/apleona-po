@@ -4,9 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PO APLEONA ISRAEL</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -920,12 +917,12 @@ function collect() {
     };
 }
 
-// ── Build HTML for PDF rendering (html2canvas) ───────────
+// ── Print-based PDF (browser native — perfect Hebrew text) ─
 function esc(s) {
     return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-function buildPOInner(poNum, d, date) {
+function buildPrintHTML(poNum, d, date, docTitle) {
     const fmt = n => Number(n).toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const itemRows = d.items.map((item, i) => `
         <tr>
@@ -937,191 +934,184 @@ function buildPOInner(poNum, d, date) {
         </tr>`).join('');
     const notesHtml = d.notes
         ? `<div class="notes"><div class="sec-title">הערות</div><div>${esc(d.notes)}</div></div>` : '';
-    return `<style>
-      *{box-sizing:border-box;margin:0;padding:0}
-      body,div,span,td,th{font-family:'Segoe UI',Arial,sans-serif}
-      .wrap{font-size:9pt;color:#333;background:#fff;direction:rtl;width:794px}
-      .hdr{background:#CC0000;color:#fff;padding:20px 40px 18px;display:flex;justify-content:space-between;align-items:flex-start;direction:ltr}
-      .hdr-left h1{font-size:22pt;font-weight:700;letter-spacing:.5px}
-      .hdr-left p{font-size:8pt;opacity:.85;margin-top:3px}
-      .hdr-right{text-align:right}
-      .po-num{font-size:13pt;font-weight:700}
-      .po-date{font-size:9pt;margin-top:3px}
-      .company{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:12px 40px;border-bottom:2pt solid #CC0000;font-size:8pt;direction:rtl;text-align:right}
-      .co-title{font-weight:700;margin-bottom:4px}
-      .content{padding:15px 40px 30px}
-      .title-box{margin-bottom:14px;padding:8px 12px;background:#fff8f0;border-right:3pt solid #CC0000;border-radius:2pt}
-      .title-lbl{font-size:7pt;font-weight:700;color:#aaa;text-transform:uppercase}
-      .title-val{font-size:11pt;font-weight:700;color:#222;margin-top:3px}
-      .boxes{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
-      .box{background:#fafafa;border:.5pt solid #ddd;border-radius:3pt;padding:9px}
-      .box-title{font-size:7pt;font-weight:700;color:#aaa;text-transform:uppercase;margin-bottom:6px}
-      .vendor-name{font-size:11pt;font-weight:700;color:#222}
-      .vendor-addr{font-size:8pt;color:#777;margin-top:4px}
-      .detail-label{font-size:8pt;color:#aaa;margin-bottom:2px}
-      .detail-val{font-size:9.5pt;font-weight:700;color:#333}
-      .detail-pay{font-size:8.5pt;color:#666;margin-top:6px}
-      .sec-title{font-size:7pt;font-weight:700;color:#aaa;text-transform:uppercase;margin-bottom:6px}
-      table{width:100%;border-collapse:collapse;font-size:9pt}
-      thead tr{background:#5a5a5a;color:#fff}
-      thead th{padding:7px 9px;font-weight:700;text-align:right}
-      thead th.center{text-align:center}
-      thead th.num{text-align:left;direction:ltr}
-      tbody tr:nth-child(even){background:#f9f9f9}
-      tbody td{padding:6px 9px;border-bottom:.5pt solid #eee;color:#333;text-align:right}
-      td.center{text-align:center}
-      td.num{text-align:left;direction:ltr}
-      .totals{display:flex;justify-content:flex-start;margin-top:12px}
-      .totals-box{width:200px;border:.5pt solid #ddd;border-radius:3pt;overflow:hidden}
-      .tot-row{display:flex;justify-content:space-between;padding:6px 9px;font-size:9pt;color:#666;background:#fafafa}
-      .tot-grand{display:flex;justify-content:space-between;padding:8px 9px;background:#5a5a5a;color:#fff;font-weight:700;font-size:10pt}
-      .notes{margin-top:14px;font-size:9pt;color:#555}
-      .sig{margin-top:24px}
-      .sig-name{font-style:italic;font-size:10pt;color:#222}
-      .sig-detail{font-size:8pt;color:#999;margin-top:3px}
-      .footer-bar{background:#CC0000;color:#fff;text-align:center;font-size:7.5pt;padding:7px;direction:ltr;margin-top:18px}
-    </style>
-    <div class="wrap">
-    <div class="hdr">
-      <div class="hdr-left"><h1>APLEONA ISRAEL LTD</h1><p>הזמנת רכש</p></div>
-      <div class="hdr-right"><div class="po-num">מספר הזמנה: ${poNum}</div><div class="po-date">תאריך: ${date}</div></div>
+    return `<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+<meta charset="UTF-8">
+<title>${esc(docTitle)}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  @page { size: A4; margin: 0; }
+  @media print {
+    body { margin: 0 !important; }
+    .no-print { display: none !important; }
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Rubik','Segoe UI',Arial,sans-serif;font-size:9pt;color:#333;background:#fff;direction:rtl;width:210mm;min-height:297mm;position:relative}
+  .hdr{background:#CC0000;color:#fff;padding:7mm 14mm 6mm;display:flex;justify-content:space-between;align-items:flex-start;direction:ltr}
+  .hdr-left h1{font-size:20pt;font-weight:700;letter-spacing:.5px}
+  .hdr-left p{font-size:8pt;opacity:.85;margin-top:1mm}
+  .hdr-right{text-align:right}
+  .hdr-right .po-num{font-size:13pt;font-weight:700}
+  .hdr-right .po-date{font-size:8.5pt;margin-top:1mm}
+  .company{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4mm;padding:4mm 14mm;border-bottom:1.5pt solid #CC0000;font-size:7.5pt;color:#333;direction:rtl;text-align:right}
+  .co-title{font-weight:700;margin-bottom:1.5mm}
+  .content{padding:5mm 14mm 25mm}
+  .title-box{margin-bottom:5mm;padding:3mm 4mm;background:#fff8f0;border-right:3pt solid #CC0000;border-radius:2pt}
+  .title-lbl{font-size:7pt;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.3pt}
+  .title-val{font-size:10.5pt;font-weight:700;color:#222;margin-top:1mm}
+  .boxes{display:grid;grid-template-columns:1fr 1fr;gap:4mm;margin-bottom:5mm}
+  .box{background:#fafafa;border:.5pt solid #ddd;border-radius:3pt;padding:3mm}
+  .box-title{font-size:6.5pt;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.4pt;margin-bottom:2mm}
+  .vendor-name{font-size:10.5pt;font-weight:700;color:#222}
+  .vendor-addr{font-size:8pt;color:#777;margin-top:1.5mm}
+  .detail-label{font-size:7.5pt;color:#aaa;margin-bottom:.5mm}
+  .detail-val{font-size:9pt;font-weight:700;color:#333}
+  .detail-pay{font-size:8pt;color:#666;margin-top:2mm}
+  .sec-title{font-size:7pt;font-weight:700;color:#aaa;text-transform:uppercase;margin-bottom:2mm}
+  table{width:100%;border-collapse:collapse;font-size:8.5pt}
+  thead tr{background:#5a5a5a;color:#fff}
+  thead th{padding:2.5mm 3mm;font-weight:700;text-align:right}
+  thead th.center{text-align:center}
+  thead th.num{text-align:left;direction:ltr}
+  tbody tr:nth-child(even){background:#f9f9f9}
+  tbody td{padding:2mm 3mm;border-bottom:.4pt solid #eee;color:#333;text-align:right}
+  td.center{text-align:center}
+  td.num{text-align:left;direction:ltr;font-variant-numeric:tabular-nums}
+  .totals{display:flex;justify-content:flex-start;margin-top:4mm}
+  .totals-box{width:64mm;border:.5pt solid #ddd;border-radius:3pt;overflow:hidden}
+  .tot-row{display:flex;justify-content:space-between;padding:2mm 3mm;font-size:8pt;color:#666;background:#fafafa}
+  .tot-grand{display:flex;justify-content:space-between;padding:2.5mm 3mm;background:#5a5a5a;color:#fff;font-weight:700;font-size:9pt}
+  .notes{margin-top:5mm;font-size:8pt;color:#555}
+  .notes .sec-title{margin-bottom:1.5mm}
+  .sig{margin-top:8mm}
+  .sig-name{font-style:italic;font-size:9pt;color:#222}
+  .sig-detail{font-size:7.5pt;color:#999;margin-top:1mm}
+  .footer{position:fixed;bottom:0;left:0;right:0;background:#CC0000;color:#fff;text-align:center;font-size:7pt;padding:2.2mm;direction:ltr}
+  .toolbar{position:fixed;top:10mm;left:10mm;display:flex;gap:8px;z-index:999;direction:ltr}
+  .toolbar button{padding:9px 18px;border:none;border-radius:5px;cursor:pointer;font-size:13px;font-weight:700;font-family:inherit}
+  .btn-p{background:#CC0000;color:#fff}
+  .btn-c{background:#555;color:#fff}
+</style>
+</head>
+<body>
+<div class="toolbar no-print">
+  <button class="btn-p" onclick="window.print()">🖨 הדפס / שמור PDF</button>
+  <button class="btn-c" onclick="window.close()">סגור</button>
+</div>
+<div class="hdr">
+  <div class="hdr-left"><h1>APLEONA ISRAEL LTD</h1><p>הזמנת רכש</p></div>
+  <div class="hdr-right"><div class="po-num">מספר הזמנה: ${poNum}</div><div class="po-date">תאריך: ${date}</div></div>
+</div>
+<div class="company">
+  <div><div class="co-title">Apleona Ltd</div>Abba Hillel 16<br>Ramat Gan 5250608<br>Israel<br>www.apleona.com/en/</div>
+  <div><div class="co-title">ניהול</div>Gordon Atkinson<br>Dr. Gert Riegel</div>
+  <div><div class="co-title">משרד ראשי</div>Ramat Gan<br>מע"מ: 516351194<br>ח.פ: 516351194<br>טל: +972-52-955-5930</div>
+</div>
+<div class="content">
+  ${d.title ? `<div class="title-box"><div class="title-lbl">נושא</div><div class="title-val">${esc(d.title)}</div></div>` : ''}
+  <div class="boxes">
+    <div class="box">
+      <div class="box-title">ספק / מזמין</div>
+      <div class="vendor-name">${esc(d.vendorName || '')}</div>
+      ${d.vendorHp ? `<div class="vendor-addr" style="font-size:7.5pt;color:#aaa;margin-top:1mm">ח.פ / ע.מ: ${esc(d.vendorHp)}</div>` : ''}
+      ${d.vendorAddress ? `<div class="vendor-addr">${esc(d.vendorAddress)}</div>` : ''}
     </div>
-    <div class="company">
-      <div><div class="co-title">Apleona Ltd</div>Abba Hillel 16<br>Ramat Gan 5250608<br>Israel</div>
-      <div><div class="co-title">ניהול</div>Gordon Atkinson<br>Dr. Gert Riegel</div>
-      <div><div class="co-title">משרד ראשי</div>Ramat Gan<br>מע"מ: 516351194<br>ח.פ: 516351194<br>טל: +972-52-955-5930</div>
+    <div class="box">
+      <div class="box-title">פרטי הזמנה</div>
+      <div class="detail-label">מיקום אספקת השירות</div>
+      <div class="detail-val">${esc(d.location || '')}</div>
+      <div class="detail-pay">תנאי תשלום: ${esc(d.payment || '')}</div>
     </div>
-    <div class="content">
-      ${d.title ? `<div class="title-box"><div class="title-lbl">נושא</div><div class="title-val">${esc(d.title)}</div></div>` : ''}
-      <div class="boxes">
-        <div class="box">
-          <div class="box-title">ספק / מזמין</div>
-          <div class="vendor-name">${esc(d.vendorName || '')}</div>
-          ${d.vendorHp ? `<div class="vendor-addr" style="font-size:8pt;color:#aaa;margin-top:3px">ח.פ / ע.מ: ${esc(d.vendorHp)}</div>` : ''}
-          ${d.vendorAddress ? `<div class="vendor-addr">${esc(d.vendorAddress)}</div>` : ''}
-        </div>
-        <div class="box">
-          <div class="box-title">פרטי הזמנה</div>
-          <div class="detail-label">מיקום אספקת השירות</div>
-          <div class="detail-val">${esc(d.location || '')}</div>
-          <div class="detail-pay">תנאי תשלום: ${esc(d.payment || '')}</div>
-        </div>
-      </div>
-      <div class="sec-title">פריטים</div>
-      <table>
-        <thead><tr>
-          <th class="center" style="width:30px">#</th>
-          <th>תיאור</th>
-          <th class="center" style="width:55px">כמות</th>
-          <th class="num" style="width:110px">מחיר יחידה</th>
-          <th class="num" style="width:110px">סה"כ</th>
-        </tr></thead>
-        <tbody>${itemRows}</tbody>
-      </table>
-      <div class="totals"><div class="totals-box">
-        <div class="tot-row"><span>סכום ביניים</span><span style="direction:ltr">${fmt(d.sub)} ש"ח</span></div>
-        <div class="tot-row"><span>מע"מ (18%)</span><span style="direction:ltr">${fmt(d.vat)} ש"ח</span></div>
-        <div class="tot-grand"><span>סה"כ לתשלום</span><span style="direction:ltr">${fmt(d.total)} ש"ח</span></div>
-      </div></div>
-      ${notesHtml}
-      <div class="sig" style="margin-top:28px">
-        <div class="sig-name">תומר כהן</div>
-        <div class="sig-detail">מנכ"ל, Apleona Israel | תאריך: ${date}</div>
-      </div>
-    </div>
-    <div class="footer-bar">Apleona Israel Ltd | Abba Hillel 16, Ramat Gan 5250608 | VAT 516351194 | www.apleona.com/en/</div>
-    </div>`;
-}
-
-async function generatePDFBlob(poNum, d) {
-    const date = document.getElementById('poDate').value;
-    const wrap = document.createElement('div');
-    wrap.style.cssText = 'position:fixed;left:-9999px;top:0;width:794px;background:#fff;direction:rtl';
-    wrap.innerHTML = buildPOInner(poNum, d, date);
-    document.body.appendChild(wrap);
-    try {
-        await new Promise(r => setTimeout(r, 400));
-        const canvas = await html2canvas(wrap, {
-            scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false, width: 794
-        });
-        const { jsPDF } = window.jspdf;
-        const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-        const imgData = canvas.toDataURL('image/jpeg', 0.93);
-        pdf.addImage(imgData, 'JPEG', 0, 0, 210, Math.min(297, (canvas.height * 210) / canvas.width));
-        return pdf.output('blob');
-    } finally {
-        document.body.removeChild(wrap);
-    }
+  </div>
+  <div class="sec-title">פריטים</div>
+  <table>
+    <thead><tr>
+      <th class="center" style="width:8mm">#</th>
+      <th>תיאור</th>
+      <th class="center" style="width:14mm">כמות</th>
+      <th class="num" style="width:30mm">מחיר יחידה</th>
+      <th class="num" style="width:30mm">סה"כ</th>
+    </tr></thead>
+    <tbody>${itemRows}</tbody>
+  </table>
+  <div class="totals"><div class="totals-box">
+    <div class="tot-row"><span>סכום ביניים</span><span style="direction:ltr">${fmt(d.sub)} ש"ח</span></div>
+    <div class="tot-row"><span>מע"מ (18%)</span><span style="direction:ltr">${fmt(d.vat)} ש"ח</span></div>
+    <div class="tot-grand"><span>סה"כ לתשלום</span><span style="direction:ltr">${fmt(d.total)} ש"ח</span></div>
+  </div></div>
+  ${notesHtml}
+  <div class="sig" style="margin-top:10mm">
+    <div class="sig-name">תומר כהן</div>
+    <div class="sig-detail">מנכ"ל, Apleona Israel &nbsp;|&nbsp; תאריך: ${date}</div>
+  </div>
+</div>
+<div class="footer">Apleona Israel Ltd &nbsp;|&nbsp; Abba Hillel 16, Ramat Gan 5250608 &nbsp;|&nbsp; VAT 516351194 &nbsp;|&nbsp; www.apleona.com/en/</div>
+<script>
+  // Auto-open print dialog when page is ready and fonts loaded
+  function triggerPrint(){ try { window.focus(); window.print(); } catch(e){} }
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(() => setTimeout(triggerPrint, 200));
+  } else {
+    window.addEventListener('load', () => setTimeout(triggerPrint, 400));
+  }
+<\/script>
+</body>
+</html>`;
 }
 
 // ── Generate flow ────────────────────────────────────────
 function generatePO() {
     const data = collect();
     if (!data.items.length) { showStatus('נא להוסיף לפחות פריט אחד', 'error'); return; }
-    runGenerate(data);
+
+    // Open popup SYNCHRONOUSLY to keep the user gesture (popup blocker friendly)
+    const win = window.open('', '_blank', 'width=900,height=900');
+    if (!win) {
+        showStatus('הדפדפן חסם חלון. אנא אפשר popup לאתר זה ונסה שוב.', 'error');
+        return;
+    }
+    // Loading splash while we claim the PO number
+    win.document.write(
+        '<!DOCTYPE html><html dir="rtl" lang="he"><head><meta charset="UTF-8"><title>מכין PDF...</title></head>' +
+        '<body style="font-family:Arial,sans-serif;display:flex;align-items:center;justify-content:center;min-height:80vh;color:#777">' +
+        '<div style="text-align:center"><div style="font-size:32px">⏳</div>' +
+        '<div style="margin-top:12px;font-size:14px">מכין PDF...</div></div></body></html>'
+    );
+    runGenerate(data, win);
 }
 
-async function runGenerate(data) {
+async function runGenerate(data, win) {
     const btn = document.getElementById('btnGen');
     btn.disabled = true; btn.textContent = '⏳ מכין...';
-
-    let poNum = null;
     try {
-        // Pick file FIRST so cancel doesn't waste a PO number
-        const tentativeName = [data.location, data.title, 'PO-NEW'].filter(Boolean).join(' - ') + '.pdf';
-        let fileHandle;
-        try {
-            fileHandle = await window.showSaveFilePicker({
-                suggestedName: tentativeName,
-                types: [{ description: 'PDF Files', accept: { 'application/pdf': ['.pdf'] } }]
-            });
-        } catch (e) {
-            if (e.name === 'AbortError') { showStatus('בוטל', 'info'); setTimeout(hideStatus, 1500); return; }
-            // Browser doesn't support showSaveFilePicker — fall back to download
-            return await downloadFallback(data);
-        }
-
         showStatus('🔢 משריין מספר PO...', 'info');
-        poNum = await claimPO();
+        const poNum = await claimPO();
         document.getElementById('poNumber').value = poNum;
         document.getElementById('poBadge').textContent = 'PO ' + poNum;
 
-        showStatus('📄 יוצר PDF...', 'info');
-        const pdfBlob = await generatePDFBlob(poNum, data);
+        const date = document.getElementById('poDate').value;
+        const docTitle = [data.location, data.title, 'PO' + poNum].filter(Boolean).join(' - ');
+        const html = buildPrintHTML(poNum, data, date, docTitle);
 
-        const w = await fileHandle.createWritable();
-        await w.write(pdfBlob);
-        await w.close();
-        showStatus('✅ PO-' + poNum + ' נשמר!', 'success');
+        win.document.open();
+        win.document.write(html);
+        win.document.close();
+
+        showStatus(
+            '✅ PO-' + poNum + ' מוכן! בחלון שנפתח: לחץ "Save as PDF" בתיבת ההדפסה',
+            'success'
+        );
         updatePoPreview();
     } catch (e) {
         console.error(e);
+        try { win.close(); } catch (err) {}
         showStatus('שגיאה: ' + e.message, 'error');
     } finally {
         btn.disabled = false; btn.textContent = '📄 צור הזמנת רכש PDF';
     }
-}
-
-// Browsers without File System Access API (Firefox, Safari) — download as blob
-async function downloadFallback(data) {
-    showStatus('🔢 משריין מספר PO...', 'info');
-    const poNum = await claimPO();
-    document.getElementById('poNumber').value = poNum;
-    document.getElementById('poBadge').textContent = 'PO ' + poNum;
-
-    showStatus('📄 יוצר PDF...', 'info');
-    const pdfBlob = await generatePDFBlob(poNum, data);
-    const filename = [data.location, data.title, 'PO' + poNum].filter(Boolean).join(' - ') + '.pdf';
-
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(pdfBlob);
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(a.href);
-    showStatus('✅ PO-' + poNum + ' הורד!', 'success');
-    updatePoPreview();
 }
 
 // ── Status ───────────────────────────────────────────────
