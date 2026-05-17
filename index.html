@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PO APLEONA ISRAEL</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -101,7 +102,6 @@
             background: #fff;
             transition: border-color 0.15s, box-shadow 0.15s;
         }
-        /* URL / API key fields are inherently LTR */
         input.ltr { direction: ltr; text-align: left; }
         input:focus, select:focus, textarea:focus {
             outline: none;
@@ -161,22 +161,6 @@
         .status.success { display: block; background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
         .status.error   { display: block; background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
         .status.info    { display: block; background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
-
-        /* ── Language toggle ── */
-        .lang-row {
-            display: flex; align-items: center; gap: 16px;
-            padding: 10px 14px; background: #fafafa;
-            border: 1px solid var(--border); border-radius: 6px;
-            margin-bottom: 12px; font-size: 13px;
-        }
-        .lang-row label.lang-opt {
-            display: flex; align-items: center; gap: 5px;
-            font-size: 13px; font-weight: 600; color: var(--text);
-            text-transform: none; letter-spacing: 0; cursor: pointer;
-        }
-        .lang-row label.lang-opt input { margin: 0; }
-        .lang-row label.lang-opt.disabled { color: #bbb; cursor: not-allowed; }
-        .lang-row .lang-hint { font-size: 11px; color: var(--muted); margin-right: auto; }
 
         /* ── Generate Btn ── */
         .btn-generate {
@@ -254,17 +238,6 @@
         .dot.red   { background:#dc3545; }
         .dot.gray  { background:#aaa; }
 
-        /* ── Destination folder modal ── */
-        .btn-dest {
-            padding: 13px 10px; background: #f8f8f8;
-            border: 1.5px solid var(--border); border-radius: 6px;
-            cursor: pointer; font-size: 13px; font-family: inherit;
-            font-weight: 600; color: var(--text); text-align: center;
-            transition: all 0.15s;
-        }
-        .btn-dest:hover { border-color: var(--red); background: var(--red-light); color: var(--red); }
-        .dest-hint { font-size: 12px; color: var(--muted); margin: 12px 0 14px; line-height: 1.6; }
-
         /* ── Saved-vendor chip ── */
         .vendor-saved-row {
             display: flex; align-items: center; gap: 4px;
@@ -328,27 +301,13 @@
             <span id="connText">לא מוגדר</span>
         </div>
 
-        <!-- Apps Script URL -->
         <div class="form-group" style="margin-bottom:10px">
-            <label>Google Apps Script URL (סנכרון מספרי PO + תרגום)</label>
+            <label>Google Apps Script URL (סנכרון מספרי PO בין עובדים)</label>
             <input type="text" class="ltr" id="cfg_scriptUrl" placeholder="https://script.google.com/macros/s/.../exec">
-            <span class="hint">המפתח של OpenAI נשמר ב-Apps Script — לא חשוף לעובדים. ראה הוראות הגדרה למטה.</span>
+            <span class="hint">ללא URL — מספרים נשמרים מקומית בלבד (לא מסונכרן).</span>
         </div>
         <button class="btn-cancel" style="margin-bottom:14px;font-size:12px;padding:6px 12px" onclick="testConnection()">🔌 בדוק חיבור</button>
 
-        <!-- OpenAI direct (fallback) -->
-        <details style="margin-bottom:14px">
-            <summary style="cursor:pointer;font-size:12px;color:var(--muted);user-select:none">
-                ▸ אפשרות חלופית: מפתח OpenAI ישיר (לא מומלץ לעובדים)
-            </summary>
-            <div class="form-group" style="margin-top:8px">
-                <label>OpenAI API Key</label>
-                <input type="password" class="ltr" id="cfg_openaiKey" placeholder="sk-proj-...">
-                <span class="hint">⚠ נשמר בדפדפן בטקסט גלוי. השתמש רק אם Apps Script לא מוגדר.</span>
-            </div>
-        </details>
-
-        <!-- Setup instructions -->
         <details style="margin-bottom:16px">
             <summary style="cursor:pointer;font-size:13px;font-weight:700;color:var(--red);padding:6px 0;user-select:none">
                 📖 הוראות הגדרת Apps Script (לחץ לפתיחה)
@@ -357,12 +316,8 @@
                 <ol class="setup-steps">
                     <li>פתח <a href="https://sheets.google.com" target="_blank" style="color:var(--red)">sheets.google.com</a> וצור גיליון חדש בשם <strong>PO Counter</strong></li>
                     <li>בתא <strong>A1</strong> הכנס את המספר: <strong>2000149</strong><br><span style="color:var(--muted);font-size:12px">(המספר הראשון שייווצר יהיה 2000150)</span></li>
-                    <li>לחץ על <strong>Extensions → Apps Script</strong></li>
+                    <li>לחץ <strong>Extensions → Apps Script</strong></li>
                     <li>מחק את הקוד הקיים והדבק את התוכן של <strong>APPS_SCRIPT.gs</strong> שבריפו</li>
-                    <li>(אופציונלי, לתרגום) <strong>Project Settings → Script Properties → Add property</strong>:<br>
-                        Name: <code>OPENAI_KEY</code>, Value: <code>sk-proj-...</code><br>
-                        <span style="font-size:11px;color:var(--muted)">המפתח לא יהיה גלוי לעובדים</span>
-                    </li>
                     <li>לחץ <strong>Deploy → New deployment → Web app</strong></li>
                     <li><em>Execute as:</em> <strong>Me</strong>, <em>Who has access:</em> <strong>Anyone</strong> → Deploy</li>
                     <li>העתק את ה-URL והדבק אותו בשדה למעלה</li>
@@ -370,7 +325,6 @@
             </div>
         </details>
 
-        <!-- Manual PO correction -->
         <div class="form-group" style="margin-bottom:4px">
             <label>תיקון מספר PO ידני (אם צריך)</label>
             <input type="number" id="cfg_poNumber" placeholder="השאר ריק אם אין תיקון">
@@ -381,16 +335,6 @@
             <button class="btn-save" onclick="saveSettings()">💾 שמור</button>
             <button class="btn-cancel" onclick="closeModal('settingsModal')">ביטול</button>
         </div>
-    </div>
-</div>
-
-<!-- DESTINATION MODAL -->
-<div class="modal-overlay" id="destModal">
-    <div class="modal-box" style="max-width:420px">
-        <div class="modal-title">📁 בחר תיקיית שמירה</div>
-        <div id="destButtons" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"></div>
-        <p class="dest-hint" id="destHint"></p>
-        <button class="btn-cancel" onclick="closeModal('destModal')">ביטול</button>
     </div>
 </div>
 
@@ -452,11 +396,11 @@
             <div class="form-group">
                 <label>מיקום אספקת השירות</label>
                 <select id="locationSelect" onchange="toggle('locationSelect','other','locationOtherGroup')">
-                    <option value="IBM Haifa">IBM חיפה</option>
-                    <option value="IBM Migdal HaShachar">IBM מגדל השחר</option>
-                    <option value="IBM Beer Sheva">IBM באר שבע</option>
-                    <option value="Bio-Rad Rishon LeZion">BIO RAD ראשון לציון</option>
-                    <option value="DB Tel Aviv">DB תל אביב</option>
+                    <option value="IBM חיפה">IBM חיפה</option>
+                    <option value="IBM מגדל השחר">IBM מגדל השחר</option>
+                    <option value="IBM באר שבע">IBM באר שבע</option>
+                    <option value="BIO RAD ראשון לציון">BIO RAD ראשון לציון</option>
+                    <option value="DB תל אביב">DB תל אביב</option>
                     <option value="other">אחר</option>
                 </select>
             </div>
@@ -467,10 +411,10 @@
             <div class="form-group">
                 <label>תנאי תשלום</label>
                 <select id="paymentSelect" onchange="toggle('paymentSelect','other','paymentOtherGroup')">
-                    <option value="Net 120 (End of Month)" selected>שוטף + 120</option>
-                    <option value="Net 30 (End of Month)">שוטף + 30</option>
-                    <option value="Net 60 (End of Month)">שוטף + 60</option>
-                    <option value="Net 90 (End of Month)">שוטף + 90</option>
+                    <option value="שוטף + 120" selected>שוטף + 120</option>
+                    <option value="שוטף + 30">שוטף + 30</option>
+                    <option value="שוטף + 60">שוטף + 60</option>
+                    <option value="שוטף + 90">שוטף + 90</option>
                     <option value="other">אחר</option>
                 </select>
             </div>
@@ -525,14 +469,6 @@
         </div>
     </div>
 
-    <!-- שפת ה-PDF -->
-    <div class="lang-row">
-        <span style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase">שפת ה-PDF:</span>
-        <label class="lang-opt"><input type="radio" name="pdfLang" value="he" checked> עברית</label>
-        <label class="lang-opt" id="enLangOpt"><input type="radio" name="pdfLang" value="en"> English</label>
-        <span class="lang-hint" id="enLangHint">תרגום דורש Apps Script או מפתח OpenAI</span>
-    </div>
-
     <!-- כפתור -->
     <div class="card">
         <button class="btn-generate" id="btnGen" onclick="generatePO()">
@@ -547,10 +483,9 @@
 
 // ── Config ───────────────────────────────────────────────
 const PO_START = 2000150;
-let cfg = { openaiKey: '', scriptUrl: '' };
+let cfg = { scriptUrl: '' };
 let rowIdx = 0;
 let savedVendors = []; // [{ name, hp, address }]
-let serverCapabilities = { translation: false };
 
 const DEFAULT_VENDOR = {
     name: 'מכלול פתרונות בע"מ',
@@ -558,67 +493,6 @@ const DEFAULT_VENDOR = {
     address: 'מדינת היהודים 89, הרצליה פיתוח',
     isDefault: true
 };
-
-const LABELS = {
-    he: {
-        poNumber: 'מספר הזמנה',
-        date: 'תאריך',
-        subject: 'נושא',
-        purchaseOrder: 'הזמנת רכש',
-        vendor: 'ספק / מזמין',
-        companyId: 'ח.פ / ע.מ',
-        orderDetails: 'פרטי הזמנה',
-        serviceLocation: 'מיקום אספקת השירות',
-        paymentTerms: 'תנאי תשלום',
-        items: 'פריטים',
-        description: 'תיאור',
-        qty: 'כמות',
-        unitPrice: 'מחיר יחידה',
-        total: 'סה"כ',
-        subtotal: 'סכום ביניים',
-        vat: 'מע"מ (18%)',
-        grandTotal: 'סה"כ לתשלום',
-        notes: 'הערות',
-        signedBy: 'תומר כהן',
-        signRole: 'מנכ"ל, Apleona Israel',
-        management: 'ניהול',
-        hq: 'משרד ראשי',
-        currency: 'ש"ח',
-        vatTag: 'מע"מ',
-        hpTag: 'ח.פ',
-        phoneTag: 'טל'
-    },
-    en: {
-        poNumber: 'PO Number',
-        date: 'Date',
-        subject: 'Subject',
-        purchaseOrder: 'Purchase Order',
-        vendor: 'Vendor / Supplier',
-        companyId: 'Company ID',
-        orderDetails: 'Order Details',
-        serviceLocation: 'Service Location',
-        paymentTerms: 'Payment Terms',
-        items: 'Items',
-        description: 'Description',
-        qty: 'Qty',
-        unitPrice: 'Unit Price',
-        total: 'Total',
-        subtotal: 'Subtotal',
-        vat: 'VAT (18%)',
-        grandTotal: 'Grand Total',
-        notes: 'Notes',
-        signedBy: 'Tomer Cohen',
-        signRole: 'CEO, Apleona Israel',
-        management: 'Management',
-        hq: 'Headquarters',
-        currency: 'ILS',
-        vatTag: 'VAT',
-        hpTag: 'CompanyID',
-        phoneTag: 'Tel'
-    }
-};
-
-const ADDR_FOOTER = 'Apleona Israel Ltd  |  Abba Hillel 16, Ramat Gan 5250608  |  VAT 516351194  |  www.apleona.com/en/';
 
 // ── Init ─────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
@@ -631,7 +505,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
     const saved = localStorage.getItem('apleona_cfg');
     if (saved) cfg = { ...cfg, ...JSON.parse(saved) };
-    document.getElementById('cfg_openaiKey').value = cfg.openaiKey || '';
     document.getElementById('cfg_scriptUrl').value = cfg.scriptUrl || '';
 
     loadVendors();
@@ -640,7 +513,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
     updatePoPreview();
     updateConnStatus();
-    refreshLangAvailability();
     addRow();
 
     if (cfg.scriptUrl) fetchServerInfo();
@@ -682,17 +554,6 @@ async function claimPO() {
     }
 }
 
-async function releasePO(n) {
-    if (!cfg.scriptUrl) {
-        const cur = parseInt(localStorage.getItem('apleona_po') || '0');
-        if (cur === n) localStorage.setItem('apleona_po', n - 1);
-        return;
-    }
-    try {
-        await fetch(cfg.scriptUrl + '?action=release&n=' + n + '&t=' + Date.now());
-    } catch (e) { /* best effort */ }
-}
-
 async function setRemotePO(n) {
     if (!cfg.scriptUrl) return;
     try {
@@ -703,25 +564,18 @@ async function setRemotePO(n) {
     }
 }
 
-// ── Connection / capabilities ────────────────────────────
 async function fetchServerInfo() {
     try {
         const res = await fetch(cfg.scriptUrl + '?action=info&t=' + Date.now());
         if (!res.ok) return;
         const data = await res.json();
         if (data.error) return;
-        serverCapabilities = { translation: !!data.translation };
-        refreshLangAvailability();
         const nextOnServer = data.nextPo;
         if (nextOnServer && nextOnServer > peekNextPO()) {
             localStorage.setItem('apleona_po', nextOnServer - 1);
             updatePoPreview();
         }
-        if (data.translation) {
-            setConnStatus('ok', '✓ מחובר — PO הבא: ' + (data.nextPo || '?') + ' + תרגום פעיל');
-        } else {
-            setConnStatus('ok', '✓ מחובר — PO הבא: ' + (data.nextPo || '?') + ' (ללא תרגום)');
-        }
+        setConnStatus('ok', '✓ מחובר — PO הבא: ' + (data.nextPo || '?'));
     } catch (e) { /* ignore */ }
 }
 
@@ -734,11 +588,19 @@ async function testConnection() {
         if (!res.ok) throw new Error('HTTP ' + res.status);
         const data = await res.json();
         if (data.error) throw new Error(data.error);
-        const trMsg = data.translation ? ' + תרגום פעיל' : ' (ללא תרגום)';
-        setConnStatus('ok', '✓ מחובר — PO הבא: ' + (data.nextPo || '?') + trMsg);
-        serverCapabilities = { translation: !!data.translation };
-        refreshLangAvailability();
+        setConnStatus('ok', '✓ מחובר — PO הבא: ' + (data.nextPo || '?'));
     } catch (e) {
+        // Fallback: maybe old script without info action
+        try {
+            const r2 = await fetch(cfg.scriptUrl + '?t=' + Date.now());
+            if (r2.ok) {
+                const d2 = await r2.json();
+                if (d2.po) {
+                    setConnStatus('ok', '✓ מחובר (גרסת סקריפט ישנה) — PO אחרון: ' + d2.po);
+                    return;
+                }
+            }
+        } catch (e2) { /* fall through */ }
         setConnStatus('off', 'שגיאה: ' + e.message);
     }
 }
@@ -757,34 +619,11 @@ function updateConnStatus() {
     else setConnStatus('na', 'לא מוגדר — מקומי בלבד');
 }
 
-function canTranslate() {
-    return !!cfg.openaiKey || (!!cfg.scriptUrl && serverCapabilities.translation);
-}
-
-function refreshLangAvailability() {
-    const enOpt = document.getElementById('enLangOpt');
-    const enInput = enOpt.querySelector('input');
-    const hint = document.getElementById('enLangHint');
-    if (canTranslate()) {
-        enOpt.classList.remove('disabled');
-        enInput.disabled = false;
-        hint.textContent = '';
-    } else {
-        enOpt.classList.add('disabled');
-        enInput.disabled = true;
-        if (enInput.checked) {
-            document.querySelector('input[name="pdfLang"][value="he"]').checked = true;
-        }
-        hint.textContent = 'תרגום דורש Apps Script (מומלץ) או מפתח OpenAI';
-    }
-}
-
 // ── Settings ─────────────────────────────────────────────
 function openModal(id) { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
 async function saveSettings() {
-    cfg.openaiKey = document.getElementById('cfg_openaiKey').value.trim();
     cfg.scriptUrl = document.getElementById('cfg_scriptUrl').value.trim();
 
     const manualPO = parseInt(document.getElementById('cfg_poNumber').value);
@@ -800,7 +639,6 @@ async function saveSettings() {
     updatePoPreview();
     updateConnStatus();
     if (cfg.scriptUrl) fetchServerInfo();
-    else { serverCapabilities = { translation: false }; refreshLangAvailability(); }
     showStatus('הגדרות נשמרו', 'success');
     setTimeout(hideStatus, 2500);
 }
@@ -847,7 +685,7 @@ function toggleEditPO() {
     }
 }
 
-// ── Vendors (with history) ───────────────────────────────
+// ── Vendors ──────────────────────────────────────────────
 function loadVendors() {
     try {
         const raw = localStorage.getItem('apleona_vendors');
@@ -1048,579 +886,242 @@ function collect() {
     const manualAddr = document.getElementById('vendorAddress').value.trim();
 
     const lSel = document.getElementById('locationSelect');
-    const locationHe = lSel.value === 'other'
+    const location = lSel.value === 'other'
         ? document.getElementById('locationOtherText').value.trim()
-        : lSel.selectedOptions[0].text;
-    const locationEn = lSel.value === 'other' ? null : lSel.value;
+        : lSel.value;
 
     const pSel = document.getElementById('paymentSelect');
-    const paymentHe = pSel.value === 'other'
+    const payment = pSel.value === 'other'
         ? document.getElementById('paymentOtherText').value.trim()
-        : pSel.selectedOptions[0].text;
-    const paymentEn = pSel.value === 'other' ? null : pSel.value;
+        : pSel.value;
 
     const items = [];
     document.querySelectorAll('#itemsBody tr').forEach(tr => {
         const inp = tr.querySelectorAll('input');
-        const descHe = inp[0]?.value.trim() || '';
+        const desc = inp[0]?.value.trim() || '';
         const qty = parseFloat(inp[1]?.value) || 0;
         const price = parseFloat(inp[2]?.value) || 0;
-        if (descHe || qty || price) {
-            items.push({ descHe, descEn: null, qty, price, total: qty * price });
+        if (desc || qty || price) {
+            items.push({ desc, qty, price, total: qty * price });
         }
     });
 
-    const notesHe = document.getElementById('notes').value.trim();
-    const titleHe = document.getElementById('poTitle').value.trim();
+    const notes = document.getElementById('notes').value.trim();
+    const title = document.getElementById('poTitle').value.trim();
     const { sub, vat, total } = recalc();
 
     return {
         vendorName: vendor.name,
-        vendorNameEn: null,
         vendorHp: vendor.hp || '',
         vendorAddress: manualAddr || vendor.address || '',
-        vendorAddressEn: null,
-        locationHe, locationEn,
-        paymentHe, paymentEn,
-        titleHe, titleEn: null,
-        items,
-        notesHe, notesEn: null,
+        location, payment,
+        title, items, notes,
         sub, vat, total
     };
 }
 
-// ── Translation ──────────────────────────────────────────
-async function translateBatchDirect(texts) {
-    const res = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + cfg.openaiKey },
-        body: JSON.stringify({
-            model: 'gpt-4o-mini',
-            temperature: 0,
-            messages: [
-                { role: 'system', content:
-                    'You are a professional translator for formal business purchase orders. ' +
-                    'Translate Hebrew to formal business English. Preserve numbers, codes and brand names verbatim. ' +
-                    'Return ONLY a valid JSON array of strings — no markdown, no code blocks, no explanation. ' +
-                    'The output array must have exactly the same number of elements as the input.'
-                },
-                { role: 'user', content: JSON.stringify(texts) }
-            ]
-        })
-    });
-    if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.error?.message || res.statusText); }
-    const d = await res.json();
-    const raw = d.choices[0].message.content.trim().replace(/^```json\s*/, '').replace(/\s*```$/, '').trim();
-    return JSON.parse(raw);
+// ── Build HTML for PDF rendering (html2canvas) ───────────
+function esc(s) {
+    return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-async function translateBatchAppsScript(texts) {
-    const res = await fetch(cfg.scriptUrl, {
-        method: 'POST',
-        // text/plain avoids CORS preflight on Apps Script web apps
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ texts })
-    });
-    if (!res.ok) throw new Error('Apps Script HTTP ' + res.status);
-    const data = await res.json();
-    if (data.error) throw new Error(data.error);
-    if (!Array.isArray(data.translations) || data.translations.length !== texts.length) {
-        throw new Error('Translation returned wrong number of items');
-    }
-    return data.translations;
+function buildPOInner(poNum, d, date) {
+    const fmt = n => Number(n).toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const itemRows = d.items.map((item, i) => `
+        <tr>
+          <td class="center">${i + 1}</td>
+          <td>${esc(item.desc || '')}</td>
+          <td class="center">${item.qty}</td>
+          <td class="num">${fmt(item.price)} ש"ח</td>
+          <td class="num">${fmt(item.total)} ש"ח</td>
+        </tr>`).join('');
+    const notesHtml = d.notes
+        ? `<div class="notes"><div class="sec-title">הערות</div><div>${esc(d.notes)}</div></div>` : '';
+    return `<style>
+      *{box-sizing:border-box;margin:0;padding:0}
+      body,div,span,td,th{font-family:'Segoe UI',Arial,sans-serif}
+      .wrap{font-size:9pt;color:#333;background:#fff;direction:rtl;width:794px}
+      .hdr{background:#CC0000;color:#fff;padding:20px 40px 18px;display:flex;justify-content:space-between;align-items:flex-start;direction:ltr}
+      .hdr-left h1{font-size:22pt;font-weight:700;letter-spacing:.5px}
+      .hdr-left p{font-size:8pt;opacity:.85;margin-top:3px}
+      .hdr-right{text-align:right}
+      .po-num{font-size:13pt;font-weight:700}
+      .po-date{font-size:9pt;margin-top:3px}
+      .company{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:12px 40px;border-bottom:2pt solid #CC0000;font-size:8pt;direction:rtl;text-align:right}
+      .co-title{font-weight:700;margin-bottom:4px}
+      .content{padding:15px 40px 30px}
+      .title-box{margin-bottom:14px;padding:8px 12px;background:#fff8f0;border-right:3pt solid #CC0000;border-radius:2pt}
+      .title-lbl{font-size:7pt;font-weight:700;color:#aaa;text-transform:uppercase}
+      .title-val{font-size:11pt;font-weight:700;color:#222;margin-top:3px}
+      .boxes{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+      .box{background:#fafafa;border:.5pt solid #ddd;border-radius:3pt;padding:9px}
+      .box-title{font-size:7pt;font-weight:700;color:#aaa;text-transform:uppercase;margin-bottom:6px}
+      .vendor-name{font-size:11pt;font-weight:700;color:#222}
+      .vendor-addr{font-size:8pt;color:#777;margin-top:4px}
+      .detail-label{font-size:8pt;color:#aaa;margin-bottom:2px}
+      .detail-val{font-size:9.5pt;font-weight:700;color:#333}
+      .detail-pay{font-size:8.5pt;color:#666;margin-top:6px}
+      .sec-title{font-size:7pt;font-weight:700;color:#aaa;text-transform:uppercase;margin-bottom:6px}
+      table{width:100%;border-collapse:collapse;font-size:9pt}
+      thead tr{background:#5a5a5a;color:#fff}
+      thead th{padding:7px 9px;font-weight:700;text-align:right}
+      thead th.center{text-align:center}
+      thead th.num{text-align:left;direction:ltr}
+      tbody tr:nth-child(even){background:#f9f9f9}
+      tbody td{padding:6px 9px;border-bottom:.5pt solid #eee;color:#333;text-align:right}
+      td.center{text-align:center}
+      td.num{text-align:left;direction:ltr}
+      .totals{display:flex;justify-content:flex-start;margin-top:12px}
+      .totals-box{width:200px;border:.5pt solid #ddd;border-radius:3pt;overflow:hidden}
+      .tot-row{display:flex;justify-content:space-between;padding:6px 9px;font-size:9pt;color:#666;background:#fafafa}
+      .tot-grand{display:flex;justify-content:space-between;padding:8px 9px;background:#5a5a5a;color:#fff;font-weight:700;font-size:10pt}
+      .notes{margin-top:14px;font-size:9pt;color:#555}
+      .sig{margin-top:24px}
+      .sig-name{font-style:italic;font-size:10pt;color:#222}
+      .sig-detail{font-size:8pt;color:#999;margin-top:3px}
+      .footer-bar{background:#CC0000;color:#fff;text-align:center;font-size:7.5pt;padding:7px;direction:ltr;margin-top:18px}
+    </style>
+    <div class="wrap">
+    <div class="hdr">
+      <div class="hdr-left"><h1>APLEONA ISRAEL LTD</h1><p>הזמנת רכש</p></div>
+      <div class="hdr-right"><div class="po-num">מספר הזמנה: ${poNum}</div><div class="po-date">תאריך: ${date}</div></div>
+    </div>
+    <div class="company">
+      <div><div class="co-title">Apleona Ltd</div>Abba Hillel 16<br>Ramat Gan 5250608<br>Israel</div>
+      <div><div class="co-title">ניהול</div>Gordon Atkinson<br>Dr. Gert Riegel</div>
+      <div><div class="co-title">משרד ראשי</div>Ramat Gan<br>מע"מ: 516351194<br>ח.פ: 516351194<br>טל: +972-52-955-5930</div>
+    </div>
+    <div class="content">
+      ${d.title ? `<div class="title-box"><div class="title-lbl">נושא</div><div class="title-val">${esc(d.title)}</div></div>` : ''}
+      <div class="boxes">
+        <div class="box">
+          <div class="box-title">ספק / מזמין</div>
+          <div class="vendor-name">${esc(d.vendorName || '')}</div>
+          ${d.vendorHp ? `<div class="vendor-addr" style="font-size:8pt;color:#aaa;margin-top:3px">ח.פ / ע.מ: ${esc(d.vendorHp)}</div>` : ''}
+          ${d.vendorAddress ? `<div class="vendor-addr">${esc(d.vendorAddress)}</div>` : ''}
+        </div>
+        <div class="box">
+          <div class="box-title">פרטי הזמנה</div>
+          <div class="detail-label">מיקום אספקת השירות</div>
+          <div class="detail-val">${esc(d.location || '')}</div>
+          <div class="detail-pay">תנאי תשלום: ${esc(d.payment || '')}</div>
+        </div>
+      </div>
+      <div class="sec-title">פריטים</div>
+      <table>
+        <thead><tr>
+          <th class="center" style="width:30px">#</th>
+          <th>תיאור</th>
+          <th class="center" style="width:55px">כמות</th>
+          <th class="num" style="width:110px">מחיר יחידה</th>
+          <th class="num" style="width:110px">סה"כ</th>
+        </tr></thead>
+        <tbody>${itemRows}</tbody>
+      </table>
+      <div class="totals"><div class="totals-box">
+        <div class="tot-row"><span>סכום ביניים</span><span style="direction:ltr">${fmt(d.sub)} ש"ח</span></div>
+        <div class="tot-row"><span>מע"מ (18%)</span><span style="direction:ltr">${fmt(d.vat)} ש"ח</span></div>
+        <div class="tot-grand"><span>סה"כ לתשלום</span><span style="direction:ltr">${fmt(d.total)} ש"ח</span></div>
+      </div></div>
+      ${notesHtml}
+      <div class="sig" style="margin-top:28px">
+        <div class="sig-name">תומר כהן</div>
+        <div class="sig-detail">מנכ"ל, Apleona Israel | תאריך: ${date}</div>
+      </div>
+    </div>
+    <div class="footer-bar">Apleona Israel Ltd | Abba Hillel 16, Ramat Gan 5250608 | VAT 516351194 | www.apleona.com/en/</div>
+    </div>`;
 }
 
-async function translateTexts(texts) {
-    if (!texts.length) return texts;
-    // Prefer Apps Script when available (key kept on server side)
-    if (cfg.scriptUrl && serverCapabilities.translation) {
-        return await translateBatchAppsScript(texts);
-    }
-    if (cfg.openaiKey) {
-        return await translateBatchDirect(texts);
-    }
-    throw new Error('תרגום דורש Apps Script עם OPENAI_KEY או מפתח OpenAI בהגדרות');
-}
-
-function hasHebrew(s) { return /[֐-׿]/.test(String(s || '')); }
-
-async function translateAll(data) {
-    const slots = [];
-    if (data.titleHe && hasHebrew(data.titleHe)) slots.push({ key: 'titleEn', value: data.titleHe });
-    if (data.notesHe && hasHebrew(data.notesHe)) slots.push({ key: 'notesEn', value: data.notesHe });
-    if (!data.locationEn && hasHebrew(data.locationHe)) slots.push({ key: 'locationEn', value: data.locationHe });
-    if (!data.paymentEn && hasHebrew(data.paymentHe)) slots.push({ key: 'paymentEn', value: data.paymentHe });
-    if (data.vendorName && hasHebrew(data.vendorName)) slots.push({ key: 'vendorNameEn', value: data.vendorName });
-    if (data.vendorAddress && hasHebrew(data.vendorAddress)) slots.push({ key: 'vendorAddressEn', value: data.vendorAddress });
-    data.items.forEach((item, i) => {
-        if (item.descHe && hasHebrew(item.descHe)) slots.push({ key: 'item:' + i, value: item.descHe });
-    });
-
-    if (!slots.length) return data;
-
-    const translations = await translateTexts(slots.map(s => s.value));
-    slots.forEach((s, i) => {
-        if (s.key.startsWith('item:')) {
-            const idx = parseInt(s.key.slice(5));
-            data.items[idx].descEn = translations[i];
-        } else {
-            data[s.key] = translations[i];
-        }
-    });
-    return data;
-}
-
-// ── PDF: Hebrew font loader ──────────────────────────────
-let _fontsReady = null;
-async function ensureHebrewFonts() {
-    if (_fontsReady) return _fontsReady;
-    _fontsReady = (async () => {
-        const FONT_URLS = {
-            'Rubik-Regular.ttf': 'https://cdn.jsdelivr.net/npm/@expo-google-fonts/rubik@0.2.3/Rubik_400Regular.ttf',
-            'Rubik-Bold.ttf': 'https://cdn.jsdelivr.net/npm/@expo-google-fonts/rubik@0.2.3/Rubik_700Bold.ttf'
-        };
-        const entries = await Promise.all(Object.entries(FONT_URLS).map(async ([name, url]) => {
-            const r = await fetch(url);
-            if (!r.ok) throw new Error('שגיאה בטעינת פונט עברית (HTTP ' + r.status + ')');
-            return [name, arrayBufferToBase64(await r.arrayBuffer())];
-        }));
-        pdfMake.vfs = pdfMake.vfs || {};
-        entries.forEach(([name, b64]) => { pdfMake.vfs[name] = b64; });
-        pdfMake.fonts = {
-            Rubik: {
-                normal: 'Rubik-Regular.ttf',
-                bold: 'Rubik-Bold.ttf',
-                italics: 'Rubik-Regular.ttf',
-                bolditalics: 'Rubik-Bold.ttf'
-            }
-        };
-    })();
-    return _fontsReady;
-}
-
-function arrayBufferToBase64(buf) {
-    const bytes = new Uint8Array(buf);
-    let binary = '';
-    const CHUNK = 0x8000;
-    for (let i = 0; i < bytes.length; i += CHUNK) {
-        binary += String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK));
-    }
-    return btoa(binary);
-}
-
-// ── PDF: document definition ─────────────────────────────
-function buildDocDef(poNum, d, date, lang) {
-    const L = LABELS[lang];
-    const isRtl = lang === 'he';
-    const align = isRtl ? 'right' : 'left';
-    const opp = isRtl ? 'left' : 'right';
-    const fmt = n => Number(n).toLocaleString(isRtl ? 'he-IL' : 'en-US',
-        { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    const cur = n => fmt(n) + ' ' + L.currency;
-    const rtlRev = arr => isRtl ? [...arr].reverse() : arr;
-
-    const vendorName = lang === 'en' ? (d.vendorNameEn || d.vendorName || '') : (d.vendorName || '');
-    const vendorAddress = lang === 'en' ? (d.vendorAddressEn || d.vendorAddress || '') : (d.vendorAddress || '');
-    const title = lang === 'en' ? (d.titleEn || d.titleHe || '') : (d.titleHe || '');
-    const notes = lang === 'en' ? (d.notesEn || d.notesHe || '') : (d.notesHe || '');
-    const location = lang === 'en' ? (d.locationEn || d.locationHe || '') : (d.locationHe || '');
-    const payment = lang === 'en' ? (d.paymentEn || d.paymentHe || '') : (d.paymentHe || '');
-
-    const itemHeader = rtlRev([
-        { text: '#', style: 'tableHead', alignment: 'center' },
-        { text: L.description, style: 'tableHead', alignment: align },
-        { text: L.qty, style: 'tableHead', alignment: 'center' },
-        { text: L.unitPrice, style: 'tableHead', alignment: opp },
-        { text: L.total, style: 'tableHead', alignment: opp }
-    ]);
-    const itemBody = d.items.map((item, i) => rtlRev([
-        { text: String(i + 1), alignment: 'center' },
-        { text: (lang === 'en' ? (item.descEn || item.descHe || '') : (item.descHe || '')), alignment: align },
-        { text: String(item.qty), alignment: 'center' },
-        { text: cur(item.price), alignment: opp },
-        { text: cur(item.total), alignment: opp }
-    ]));
-    const itemWidths = rtlRev([22, '*', 38, 75, 80]);
-
-    const companyRow = rtlRev([
-        {
-            stack: [
-                { text: 'Apleona Ltd', bold: true, fontSize: 8.5, color: '#222' },
-                { text: 'Abba Hillel 16\nRamat Gan 5250608\nIsrael', fontSize: 7.5, color: '#555', margin: [0, 2, 0, 0] }
-            ],
-            alignment: align,
-            border: [false, false, false, false]
-        },
-        {
-            stack: [
-                { text: L.management, bold: true, fontSize: 8.5, color: '#222' },
-                { text: 'Gordon Atkinson\nDr. Gert Riegel', fontSize: 7.5, color: '#555', margin: [0, 2, 0, 0] }
-            ],
-            alignment: align,
-            border: [false, false, false, false]
-        },
-        {
-            stack: [
-                { text: L.hq, bold: true, fontSize: 8.5, color: '#222' },
-                { text: 'Ramat Gan\n' + L.vatTag + ': 516351194\n' + L.hpTag + ': 516351194\n' + L.phoneTag + ': +972-52-955-5930',
-                  fontSize: 7.5, color: '#555', margin: [0, 2, 0, 0] }
-            ],
-            alignment: align,
-            border: [false, false, false, false]
-        }
-    ]);
-
-    const vendorBoxStack = [
-        { text: L.vendor, style: 'boxTitle', alignment: align },
-        { text: vendorName, style: 'vendorName', alignment: align, margin: [0, 3, 0, 0] }
-    ];
-    if (d.vendorHp) vendorBoxStack.push({ text: L.companyId + ': ' + d.vendorHp, fontSize: 7.5, color: '#999', alignment: align, margin: [0, 2, 0, 0] });
-    if (vendorAddress) vendorBoxStack.push({ text: vendorAddress, fontSize: 8, color: '#777', alignment: align, margin: [0, 2, 0, 0] });
-
-    const orderBoxStack = [
-        { text: L.orderDetails, style: 'boxTitle', alignment: align },
-        { text: L.serviceLocation, fontSize: 7.5, color: '#aaa', alignment: align, margin: [0, 3, 0, 0] },
-        { text: location, fontSize: 9.5, bold: true, color: '#333', alignment: align },
-        { text: L.paymentTerms + ': ' + payment, fontSize: 8, color: '#666', alignment: align, margin: [0, 5, 0, 0] }
-    ];
-
-    const infoBoxes = {
-        margin: [40, 0, 40, 12],
-        table: {
-            widths: rtlRev(['*', 8, '*']),
-            body: [rtlRev([
-                { stack: vendorBoxStack, fillColor: '#fafafa', margin: [9, 8, 9, 8] },
-                { text: '', border: [false, false, false, false] },
-                { stack: orderBoxStack, fillColor: '#fafafa', margin: [9, 8, 9, 8] }
-            ])]
-        },
-        layout: {
-            hLineWidth: () => 0.5,
-            vLineWidth: () => 0.5,
-            hLineColor: () => '#ddd',
-            vLineColor: () => '#ddd'
-        }
-    };
-
-    const titleBox = title ? {
-        margin: [40, 0, 40, 12],
-        table: {
-            widths: ['*'],
-            body: [[{
-                stack: [
-                    { text: L.subject, fontSize: 7, bold: true, color: '#aaa', alignment: align, characterSpacing: 0.3 },
-                    { text: title, fontSize: 11, bold: true, color: '#222', alignment: align, margin: [0, 2, 0, 0] }
-                ],
-                fillColor: '#fff8f0',
-                border: [false, false, false, false],
-                margin: [10, 6, 10, 6]
-            }]]
-        },
-        layout: {
-            hLineWidth: () => 0,
-            vLineWidth: () => 0,
-            paddingLeft: () => 0, paddingRight: () => 0, paddingTop: () => 0, paddingBottom: () => 0
-        }
-    } : null;
-
-    const totalsTable = {
-        widths: ['*', 90],
-        body: [
-            rtlRev([
-                { text: L.subtotal, fontSize: 8.5, color: '#666', fillColor: '#fafafa', alignment: align, margin: [6, 4, 6, 4] },
-                { text: cur(d.sub), fontSize: 8.5, color: '#666', fillColor: '#fafafa', alignment: opp, margin: [6, 4, 6, 4] }
-            ]),
-            rtlRev([
-                { text: L.vat, fontSize: 8.5, color: '#666', fillColor: '#fafafa', alignment: align, margin: [6, 4, 6, 4] },
-                { text: cur(d.vat), fontSize: 8.5, color: '#666', fillColor: '#fafafa', alignment: opp, margin: [6, 4, 6, 4] }
-            ]),
-            rtlRev([
-                { text: L.grandTotal, fontSize: 9.5, bold: true, color: 'white', fillColor: '#5a5a5a', alignment: align, margin: [6, 5, 6, 5] },
-                { text: cur(d.total), fontSize: 9.5, bold: true, color: 'white', fillColor: '#5a5a5a', alignment: opp, margin: [6, 5, 6, 5] }
-            ])
-        ]
-    };
-    const totalsBlock = {
-        margin: [40, 8, 40, 0],
-        columns: rtlRev([
-            { width: '*', text: '' },
-            {
-                width: 200,
-                table: totalsTable,
-                layout: {
-                    hLineWidth: () => 0.4,
-                    vLineWidth: () => 0.4,
-                    hLineColor: () => '#ddd',
-                    vLineColor: () => '#ddd'
-                }
-            }
-        ])
-    };
-
-    const notesBlock = notes ? {
-        margin: [40, 12, 40, 0],
-        stack: [
-            { text: L.notes, fontSize: 7, bold: true, color: '#aaa', alignment: align, characterSpacing: 0.3, margin: [0, 0, 0, 3] },
-            { text: notes, fontSize: 8.5, color: '#555', alignment: align }
-        ]
-    } : null;
-
-    const signature = {
-        margin: [40, 20, 40, 0],
-        stack: [
-            { text: L.signedBy, italics: true, fontSize: 10, color: '#222', alignment: align },
-            { text: L.signRole + '  |  ' + L.date + ': ' + date, fontSize: 8, color: '#999', alignment: align, margin: [0, 2, 0, 0] }
-        ]
-    };
-
-    const content = [
-        {
-            table: {
-                widths: ['*', '*'],
-                body: [[
-                    {
-                        stack: [
-                            { text: 'APLEONA ISRAEL LTD', fontSize: 20, bold: true, color: 'white', characterSpacing: 0.6 },
-                            { text: L.purchaseOrder, fontSize: 8.5, color: 'white', margin: [0, 3, 0, 0] }
-                        ],
-                        fillColor: '#CC0000',
-                        border: [false, false, false, false],
-                        margin: [40, 18, 40, 16],
-                        alignment: 'left'
-                    },
-                    {
-                        stack: [
-                            { text: L.poNumber + ': ' + poNum, fontSize: 13, bold: true, color: 'white' },
-                            { text: L.date + ': ' + date, fontSize: 9, color: 'white', margin: [0, 3, 0, 0] }
-                        ],
-                        fillColor: '#CC0000',
-                        border: [false, false, false, false],
-                        margin: [40, 18, 40, 16],
-                        alignment: 'right'
-                    }
-                ]]
-            },
-            layout: 'noBorders'
-        },
-        {
-            margin: [40, 10, 40, 0],
-            table: { widths: ['*', '*', '*'], body: [companyRow] },
-            layout: 'noBorders'
-        },
-        {
-            margin: [40, 6, 40, 14],
-            canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 1.5, lineColor: '#CC0000' }]
-        }
-    ];
-    if (titleBox) content.push(titleBox);
-    content.push(infoBoxes);
-    content.push({ text: L.items, fontSize: 8, bold: true, color: '#aaa', characterSpacing: 0.3, alignment: align, margin: [40, 6, 40, 4] });
-    content.push({
-        margin: [40, 0, 40, 0],
-        table: { headerRows: 1, widths: itemWidths, body: [itemHeader, ...itemBody] },
-        layout: {
-            fillColor: (rowIndex) => rowIndex === 0 ? '#5a5a5a' : (rowIndex % 2 === 0 ? '#f9f9f9' : null),
-            hLineWidth: (i, node) => i === 0 || i === node.table.body.length ? 0 : 0.4,
-            vLineWidth: () => 0,
-            hLineColor: () => '#eee',
-            paddingLeft: () => 6, paddingRight: () => 6, paddingTop: () => 5, paddingBottom: () => 5
-        }
-    });
-    content.push(totalsBlock);
-    if (notesBlock) content.push(notesBlock);
-    content.push(signature);
-
-    return {
-        pageSize: 'A4',
-        pageMargins: [0, 0, 0, 36],
-        info: { title: 'PO ' + poNum, author: 'Apleona Israel Ltd', subject: title || ('PO ' + poNum) },
-        defaultStyle: { font: 'Rubik', fontSize: 9, color: '#333' },
-        styles: {
-            tableHead: { bold: true, color: 'white', fontSize: 9 },
-            boxTitle: { fontSize: 7, bold: true, color: '#aaa', characterSpacing: 0.3 },
-            vendorName: { fontSize: 11, bold: true, color: '#222' }
-        },
-        background: function (currentPage, pageSize) {
-            return [{
-                canvas: [{
-                    type: 'rect',
-                    x: 0, y: pageSize.height - 22,
-                    w: pageSize.width, h: 22,
-                    color: '#CC0000'
-                }]
-            }];
-        },
-        footer: function () {
-            return {
-                text: ADDR_FOOTER,
-                alignment: 'center',
-                color: 'white',
-                fontSize: 7.5,
-                margin: [0, 7, 0, 0]
-            };
-        }
-    };
-}
-
-async function generatePDFBlob(poNum, d, lang) {
-    await ensureHebrewFonts();
+async function generatePDFBlob(poNum, d) {
     const date = document.getElementById('poDate').value;
-    const docDef = buildDocDef(poNum, d, date, lang);
-    return new Promise((resolve, reject) => {
-        try {
-            pdfMake.createPdf(docDef).getBlob(blob => resolve(blob));
-        } catch (e) { reject(e); }
-    });
-}
-
-// ── File System ──────────────────────────────────────────
-const _dirHandles = {};
-
-async function getOrPickFolder(key, hint) {
-    if (_dirHandles[key]) return _dirHandles[key];
-    showStatus('בחר את תיקיית ' + hint + ' ולחץ "Select Folder"', 'info');
-    _dirHandles[key] = await window.showDirectoryPicker({ mode: 'readwrite', id: key });
-    return _dirHandles[key];
-}
-
-async function writePDFToFolder(pdfBlob, filename, rootHandle, subfolder) {
-    const target = subfolder
-        ? await rootHandle.getDirectoryHandle(subfolder, { create: false })
-        : rootHandle;
-    const fh = await target.getFileHandle(filename, { create: true });
-    const w = await fh.createWritable();
-    await w.write(pdfBlob);
-    await w.close();
-}
-
-async function autoSavePDF(poNum, d, dest, lang) {
-    const isIBM = (d.locationHe || '').startsWith('IBM') || (d.locationEn || '').startsWith('IBM');
-    const locVal = document.getElementById('locationSelect').value;
-    const namePrefix = (isIBM && dest && dest !== 'auto') ? ('IBM [' + dest + ']') : (d.locationHe || d.locationEn || '');
-    const filename = [namePrefix, d.titleHe || d.titleEn, 'PO' + poNum].filter(Boolean).join(' - ') + '.pdf';
-
-    const pdfBlob = await generatePDFBlob(poNum, d, lang);
-
-    if (isIBM && dest && dest !== 'auto') {
-        const root = await getOrPickFolder('ibm', '"PO to Michlol" של IBM');
-        await writePDFToFolder(pdfBlob, filename, root, dest);
-    } else if (locVal === 'Bio-Rad Rishon LeZion') {
-        const root = await getOrPickFolder('biorad', '"PO to Michlol" של BIO RAD');
-        await writePDFToFolder(pdfBlob, filename, root, null);
-    } else {
-        const root = await getOrPickFolder('db', '"PO TO MICHLOL" של DB');
-        await writePDFToFolder(pdfBlob, filename, root, null);
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'position:fixed;left:-9999px;top:0;width:794px;background:#fff;direction:rtl';
+    wrap.innerHTML = buildPOInner(poNum, d, date);
+    document.body.appendChild(wrap);
+    try {
+        await new Promise(r => setTimeout(r, 400));
+        const canvas = await html2canvas(wrap, {
+            scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false, width: 794
+        });
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+        const imgData = canvas.toDataURL('image/jpeg', 0.93);
+        pdf.addImage(imgData, 'JPEG', 0, 0, 210, Math.min(297, (canvas.height * 210) / canvas.width));
+        return pdf.output('blob');
+    } finally {
+        document.body.removeChild(wrap);
     }
-    return filename;
 }
 
 // ── Generate flow ────────────────────────────────────────
-const IBM_FOLDERS = ['חיפה', 'שחר גבעתיים', 'באר שבע', 'פתח תיקווה', 'כלל האתרים'];
-
-function getPdfLang() {
-    return document.querySelector('input[name="pdfLang"]:checked')?.value || 'he';
-}
-
 function generatePO() {
     const data = collect();
     if (!data.items.length) { showStatus('נא להוסיף לפחות פריט אחד', 'error'); return; }
-    const lang = getPdfLang();
-    if (lang === 'en' && !canTranslate()) {
-        showStatus('תרגום לאנגלית דורש Apps Script (מומלץ) או מפתח OpenAI בהגדרות', 'error');
-        return;
-    }
-    const locVal = document.getElementById('locationSelect').value;
-    if (locVal === 'other') { proceedWithDest(null, data, lang); return; }
-    showDestModal(locVal, data, lang);
+    runGenerate(data);
 }
 
-function showDestModal(locVal, data, lang) {
-    const container = document.getElementById('destButtons');
-    container.innerHTML = '';
-
-    const mk = (label, dest, full, dashed) => {
-        const b = document.createElement('button');
-        b.className = 'btn-dest';
-        if (full) b.style.gridColumn = '1 / -1';
-        if (dashed) b.style.borderStyle = 'dashed';
-        b.textContent = label;
-        b.onclick = () => { closeModal('destModal'); proceedWithDest(dest, data, lang); };
-        container.appendChild(b);
-    };
-
-    if (locVal.startsWith('IBM')) {
-        IBM_FOLDERS.forEach(f => mk(f, f, false, false));
-        document.getElementById('destHint').textContent = 'לחץ על תיקייה — הקובץ יישמר אוטומטית ללא חלונות נוספים';
-    } else {
-        const label = locVal === 'Bio-Rad Rishon LeZion' ? 'BIO RAD ראשון לציון' : 'DB תל אביב';
-        mk(label + ' — שמור אוטומטית ✓', 'auto', true, false);
-        document.getElementById('destHint').textContent = 'הקובץ יישמר אוטומטית לתיקיית הלקוח';
-    }
-    mk('📂 בחר תיקייה אחרת (ידני)', null, true, true);
-    openModal('destModal');
-}
-
-async function proceedWithDest(dest, data, lang) {
+async function runGenerate(data) {
     const btn = document.getElementById('btnGen');
     btn.disabled = true; btn.textContent = '⏳ מכין...';
+
     let poNum = null;
-    let claimed = false;
-
     try {
-        if (lang === 'en') {
-            showStatus('🌐 מתרגם לאנגלית...', 'info');
-            await translateAll(data);
+        // Pick file FIRST so cancel doesn't waste a PO number
+        const tentativeName = [data.location, data.title, 'PO-NEW'].filter(Boolean).join(' - ') + '.pdf';
+        let fileHandle;
+        try {
+            fileHandle = await window.showSaveFilePicker({
+                suggestedName: tentativeName,
+                types: [{ description: 'PDF Files', accept: { 'application/pdf': ['.pdf'] } }]
+            });
+        } catch (e) {
+            if (e.name === 'AbortError') { showStatus('בוטל', 'info'); setTimeout(hideStatus, 1500); return; }
+            // Browser doesn't support showSaveFilePicker — fall back to download
+            return await downloadFallback(data);
         }
-
-        showStatus('⏳ טוען פונטים...', 'info');
-        const fontsPromise = ensureHebrewFonts();
-
-        // For manual save: prompt for file FIRST, only claim PO after user confirms
-        let manualFileHandle = null;
-        if (dest === null) {
-            const tentativeName = [data.locationHe || data.locationEn, data.titleHe || data.titleEn, 'PO-NEW'].filter(Boolean).join(' - ') + '.pdf';
-            try {
-                manualFileHandle = await window.showSaveFilePicker({
-                    suggestedName: tentativeName,
-                    types: [{ description: 'PDF Files', accept: { 'application/pdf': ['.pdf'] } }]
-                });
-            } catch (e) {
-                if (e.name === 'AbortError') { showStatus('בוטל', 'info'); setTimeout(hideStatus, 1500); return; }
-                throw e;
-            }
-        }
-
-        await fontsPromise;
 
         showStatus('🔢 משריין מספר PO...', 'info');
         poNum = await claimPO();
-        claimed = true;
         document.getElementById('poNumber').value = poNum;
         document.getElementById('poBadge').textContent = 'PO ' + poNum;
 
         showStatus('📄 יוצר PDF...', 'info');
-        if (manualFileHandle) {
-            const pdfBlob = await generatePDFBlob(poNum, data, lang);
-            const w = await manualFileHandle.createWritable();
-            await w.write(pdfBlob);
-            await w.close();
-            showStatus('✅ PO-' + poNum + ' נשמר!', 'success');
-        } else {
-            const filename = await autoSavePDF(poNum, data, dest, lang);
-            const folder = (dest && dest !== 'auto') ? dest : 'תיקיית הלקוח';
-            showStatus('✅ PO-' + poNum + ' נשמר בתיקיית ' + folder + ' (' + filename + ')', 'success');
-        }
+        const pdfBlob = await generatePDFBlob(poNum, data);
+
+        const w = await fileHandle.createWritable();
+        await w.write(pdfBlob);
+        await w.close();
+        showStatus('✅ PO-' + poNum + ' נשמר!', 'success');
         updatePoPreview();
     } catch (e) {
         console.error(e);
-        if (claimed && poNum !== null) {
-            await releasePO(poNum);
-            updatePoPreview();
-        }
         showStatus('שגיאה: ' + e.message, 'error');
     } finally {
         btn.disabled = false; btn.textContent = '📄 צור הזמנת רכש PDF';
     }
+}
+
+// Browsers without File System Access API (Firefox, Safari) — download as blob
+async function downloadFallback(data) {
+    showStatus('🔢 משריין מספר PO...', 'info');
+    const poNum = await claimPO();
+    document.getElementById('poNumber').value = poNum;
+    document.getElementById('poBadge').textContent = 'PO ' + poNum;
+
+    showStatus('📄 יוצר PDF...', 'info');
+    const pdfBlob = await generatePDFBlob(poNum, data);
+    const filename = [data.location, data.title, 'PO' + poNum].filter(Boolean).join(' - ') + '.pdf';
+
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(pdfBlob);
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
+    showStatus('✅ PO-' + poNum + ' הורד!', 'success');
+    updatePoPreview();
 }
 
 // ── Status ───────────────────────────────────────────────
@@ -1629,15 +1130,6 @@ function showStatus(msg, type) {
     el.textContent = msg; el.className = 'status ' + type;
 }
 function hideStatus() { document.getElementById('statusBar').className = 'status'; }
-
-// Block English selection when translation isn't available
-document.addEventListener('change', (e) => {
-    if (e.target.name === 'pdfLang' && e.target.value === 'en' && !canTranslate()) {
-        document.querySelector('input[name="pdfLang"][value="he"]').checked = true;
-        showStatus('תרגום לאנגלית דורש Apps Script (מומלץ) או מפתח OpenAI בהגדרות', 'error');
-        setTimeout(hideStatus, 4000);
-    }
-});
 </script>
 </body>
 </html>
